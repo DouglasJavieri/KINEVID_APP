@@ -33,9 +33,6 @@ public abstract class AuditableEntity implements Serializable, Cloneable {
     @Column(name = "modified_by")
     protected String modifiedBy;
 
-    @Version
-    protected  Long version;
-
     protected boolean deleted = false;
 
     public Object clone()throws CloneNotSupportedException{

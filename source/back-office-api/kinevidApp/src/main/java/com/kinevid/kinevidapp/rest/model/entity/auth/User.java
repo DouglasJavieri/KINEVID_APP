@@ -31,14 +31,6 @@ public class User extends AuditableEntity implements Serializable {
     private String username;
 
     @Basic
-    @Column(name = "name", nullable = false, length = 60)
-    private String name;
-
-    @Basic
-    @Column(name = "lastname", nullable = false, length = 60)
-    private String lastname;
-
-    @Basic
     @Column(name = "email", nullable = false, length = 50, unique = true)
     private String email;
 
@@ -47,11 +39,7 @@ public class User extends AuditableEntity implements Serializable {
     private String password;
 
     @Basic
-    @Column(name = "phone", nullable = false, length = 15)
-    private String phone;
-
-    @Basic
     @Enumerated(EnumType.STRING)
-    @Column(name = "state_user", nullable = false, length = 30)
+    @Column(name = "state_user", length = 30)
     private UserStatus status;
 }

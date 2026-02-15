@@ -1,15 +1,15 @@
-package com.kinevid.kinevidapp.rest.model.enums.auth;
+package com.kinevid.kinevidapp.rest.model.enums.role;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 /**
  * @author Douglas Cristhian Javieri Vino
- * @created 01/02/2026
+ * @created 15/02/2026
  */
 @Getter
 @RequiredArgsConstructor
-public enum UserStatus {
+public enum RoleStatus {
     ACTIVE("ACTIVO", "Activo"),
     INACTIVE("INACTIVO", "Inactivo"),
     ELIMINATION("ELIMINADO", "Eliminado");
