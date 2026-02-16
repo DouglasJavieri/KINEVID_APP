@@ -19,7 +19,7 @@ import java.io.Serializable;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "Role")
+@Table(name = "role")
 public class Role extends AuditableEntity implements Serializable {
     @Id
     @Column(name = "id")

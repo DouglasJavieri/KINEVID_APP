@@ -17,7 +17,7 @@ import java.io.Serializable;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "Permission")
+@Table(name = "permission")
 public class Permission extends AuditableEntity implements Serializable {
     @Id
     @Column(name = "id")
@@ -27,7 +27,7 @@ public class Permission extends AuditableEntity implements Serializable {
 
     @Basic
     @Column(name = "name_permission", length = 60)
-    private String namePermission;
+    private String name;
 
     @Basic
     @Column(name = "description", length = 255)

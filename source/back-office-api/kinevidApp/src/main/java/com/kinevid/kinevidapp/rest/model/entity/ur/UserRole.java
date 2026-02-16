@@ -16,7 +16,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "User_Role")
+@Table(name = "user_role")
 public class UserRole {
     @Id
     @Column(name = "ID")
