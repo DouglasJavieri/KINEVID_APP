@@ -39,7 +39,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     @Override
     @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userService.findByUsername(username)
+        User user = userService.findByUsernameAuthentication(username)
                 .orElseThrow(() -> new UsernameNotFoundException("Username no encontrado" +  username));
 
         // Mapeamos Roles y Permisos desde tus tablas intermedias
