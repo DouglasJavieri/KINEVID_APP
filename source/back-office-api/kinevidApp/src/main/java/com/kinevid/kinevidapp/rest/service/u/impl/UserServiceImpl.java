@@ -117,7 +117,7 @@ public class UserServiceImpl implements UserService {
             ValidationUtil.throwExceptionIfInvalidText("Password", user.getPassword(), true, 100);
 
             User userModel = userRepository.findById(id)
-                    .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+                    .orElseThrow(() -> new OperationException("Usuario no encontrado"));
 
             Optional<UsernameResponseDto> findByUsername = userRepository.findByUsername(user.getUsername());
             if(findByUsername.isPresent()) {
