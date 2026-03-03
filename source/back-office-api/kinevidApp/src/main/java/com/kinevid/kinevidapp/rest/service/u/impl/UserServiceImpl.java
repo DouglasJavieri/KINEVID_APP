@@ -155,12 +155,11 @@ public class UserServiceImpl implements UserService {
             userModel.setStatus(UserStatus.ELIMINATION);
             userRepository.save(userModel);
         } catch (OperationException e) {
-            log.error("Error de operación al eliminar rol {}", e.getMessage());
+            log.error("Error de operación al eliminar un Usuario {}", e.getMessage());
             throw e;
-
         } catch (Exception e) {
-            log.error("Error inesperado al eliminar rol {}", e.getMessage(), e);
-            throw new OperationException("Ocurrió un error inesperado al eliminar el rol.");
+            log.error("Error inesperado al eliminar Usuario {}", e.getMessage(), e);
+            throw new OperationException("Ocurrió un error inesperado al eliminar el Usuario.");
         }
     }
 }
