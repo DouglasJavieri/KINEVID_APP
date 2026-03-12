@@ -1,6 +1,7 @@
 package com.kinevid.kinevidapp.rest.service.role.impl;
 
 import com.kinevid.kinevidapp.rest.exception.OperationException;
+import com.kinevid.kinevidapp.rest.model.dto.role.PagedRoleResponseDto;
 import com.kinevid.kinevidapp.rest.model.dto.role.RoleResponseDto;
 import com.kinevid.kinevidapp.rest.model.entity.role.Role;
 import com.kinevid.kinevidapp.rest.model.enums.role.RoleStatus;
@@ -28,7 +29,7 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<RoleResponseDto> findAllRoles(String status, Pageable pageable) throws OperationException {
+    public Page<PagedRoleResponseDto> findAllRoles(String status, Pageable pageable) throws OperationException {
         try {
             RoleStatus roleStatus = RoleStatus.valueOf(status);
             return roleRepository.findAllRoles(roleStatus, pageable);
@@ -112,6 +113,25 @@ public class RoleServiceImpl implements RoleService {
         } catch (Exception e) {
             log.error("Error inesperado al eliminar rol {}", e.getMessage(), e);
             throw new OperationException("Ocurrió un error inesperado al eliminar el rol.");
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public void changeStatus(Long idRol, String status) throws OperationException {
+        try {
+            Role role = roleRepository.findById(idRol)
+                    .orElseThrow(() -> new OperationException("No existe un rol con id " + idRol));
+
+            RoleStatus roleStatus = RoleStatus.valueOf(status);
+            role.setStatus(roleStatus);
+            roleRepository.save(role);
+        } catch (OperationException e) {
+            log.error("Error de operación al cambiar estado de rol {}", e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            log.error("Error inesperado al cambiar estado de rol {}", e.getMessage(), e);
+            throw new OperationException("Ocurrió un error inesperado al cambiar estado de rol.");
         }
     }
 }

@@ -93,7 +93,7 @@ public class UserController {
                     @ApiResponse(responseCode = "401", description = "Fallo de autentificación", content = @Content(schema = @Schema(hidden = true))),
                     @ApiResponse(responseCode = "404", description = "Usuario no encontrado")
             }, security = @SecurityRequirement(name = "bearerToken"))
-    public ResponseEntity<ResponseBody<Boolean>> deleteUser(@PathVariable Long id) {
+    public ResponseEntity<ResponseBody<Boolean>> deleteUser(@PathVariable("id") Long id) {
         try {
             this.userService.deleteUser(id);
             return ok(ApiUtil.buildResponseWithDefaults(true));
