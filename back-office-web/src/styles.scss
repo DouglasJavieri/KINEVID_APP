@@ -1,1 +1,76 @@
-/* You can add global styles to this file, and also import other style files */
+// Custom Theming for Angular Material
+@use '@angular/material' as mat;
+
+/* MATERIAL CORE */
+@include mat.core();
+
+/* KINEVID COLOR PALETTE */
+
+$kinevid-primary: mat.define-palette(mat.$deep-purple-palette, 400, 200, 700);
+$kinevid-accent: mat.define-palette(mat.$purple-palette, 300);
+$kinevid-warn: mat.define-palette(mat.$red-palette);
+
+/* THEME */
+
+$kinevid-theme: mat.define-light-theme((
+        color: (
+                primary: $kinevid-primary,
+                accent: $kinevid-accent,
+                warn: $kinevid-warn
+        )
+));
+
+@include mat.all-component-themes($kinevid-theme);
+
+/* GLOBAL APP STYLES */
+
+html, body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: 'Roboto', sans-serif;
+  background: #f5f7fb;
+  overflow-x: hidden;
+}
+
+h1, h2, h3, h4 {
+  font-weight: 500;
+}
+
+button {
+  font-weight: 500;
+}
+
+label {
+  font-weight: 400;
+}
+
+/* UTILITIES */
+
+.text-primary {
+  color: #667eea;
+}
+
+/* SNACKBAR COLORS */
+
+.snackbar-error {
+  background-color: #f44336;
+  color: white;
+}
+
+.snackbar-success {
+  background-color: #4bb543;
+  color: white;
+}
+
+.snackbar-warning {
+  background-color: #ff9800;
+  color: white;
+}
+
+.snackbar-info {
+  background-color: #2196f3;
+  color: white;
+}
