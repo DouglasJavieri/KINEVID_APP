@@ -1,0 +1,29 @@
+<aside class="sidebar" [class.sidebar--collapsed]="!isOpen">
+  <div class="sidebar__header">
+    <div class="sidebar__logo">
+      <span *ngIf="isOpen" class="sidebar__logo-text">BackOffice</span>
+      <span class="sidebar__logo-icon material-icons">dashboard</span>
+    </div>
+
+    <button class="sidebar__toggle" type="button" (click)="onToggle()" aria-label="Toggle sidebar">
+      <span class="material-icons">{{ isOpen ? 'menu_open' : 'menu' }}</span>
+    </button>
+  </div>
+
+  <nav class="sidebar__nav">
+    <ul class="sidebar__menu">
+      <li class="sidebar__item" *ngFor="let item of menuItems">
+        <a
+          class="sidebar__link"
+          [class.sidebar__link--active]="item.active"
+          [routerLink]="item.route"
+          (click)="onMenuClick(item)"
+          [title]="item.label"
+        >
+          <span class="sidebar__icon material-icons">{{ item.icon }}</span>
+          <span class="sidebar__label" *ngIf="isOpen">{{ item.label }}</span>
+        </a>
+      </li>
+    </ul>
+  </nav>
+</aside>
