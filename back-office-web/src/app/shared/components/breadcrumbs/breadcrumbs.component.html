@@ -1,0 +1,25 @@
+<div class="breadcrumbs-container">
+  <div class="breadcrumbs-content">
+    <div class="title">{{ current }}</div>
+
+    <nav class="crumbs" aria-label="breadcrumbs">
+      <div *ngFor="let crumb of crumbs; let last = last" class="crumb">
+        <a *ngIf="crumb.link" [routerLink]="['/' + crumb.link]" class="crumb-link">
+          {{ crumb.name }}
+        </a>
+        <span *ngIf="!crumb.link" class="crumb-text">
+          {{ crumb.name }}
+        </span>
+        <mat-icon class="chevron" *ngIf="!last">chevron_right</mat-icon>
+      </div>
+
+      <div class="crumb current">
+        <span class="crumb-text">{{ current }}</span>
+      </div>
+    </nav>
+  </div>
+
+  <div class="breadcrumbs-image" *ngIf="img">
+    <img [src]="img" [alt]="current">
+  </div>
+</div>

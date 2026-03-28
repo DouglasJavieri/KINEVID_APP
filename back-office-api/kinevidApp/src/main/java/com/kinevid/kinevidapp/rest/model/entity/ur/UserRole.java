@@ -1,9 +1,12 @@
 package com.kinevid.kinevidapp.rest.model.entity.ur;
 
+import com.kinevid.kinevidapp.rest.model.base.AuditableEntity;
 import com.kinevid.kinevidapp.rest.model.entity.auth.User;
 import com.kinevid.kinevidapp.rest.model.entity.role.Role;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.io.Serializable;
 
 /**
  * @author Douglas Cristhian Javieri Vino
@@ -17,7 +20,7 @@ import lombok.*;
 @AllArgsConstructor
 @Entity
 @Table(name = "user_role")
-public class UserRole {
+public class UserRole  extends AuditableEntity implements Serializable {
     @Id
     @Column(name = "ID")
     @SequenceGenerator(name = "SEQ_USER_ROLE_ID_GENERATOR", sequenceName = "SEQ_USER_ROLE_ID", allocationSize = 1)

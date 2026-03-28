@@ -1,29 +1,51 @@
 <aside class="sidebar" [class.sidebar--collapsed]="!isOpen">
-  <div class="sidebar__header">
-    <div class="sidebar__logo">
-      <span *ngIf="isOpen" class="sidebar__logo-text">BackOffice</span>
-      <span class="sidebar__logo-icon material-icons">dashboard</span>
-    </div>
-
-    <button class="sidebar__toggle" type="button" (click)="onToggle()" aria-label="Toggle sidebar">
-      <span class="material-icons">{{ isOpen ? 'menu_open' : 'menu' }}</span>
-    </button>
-  </div>
-
   <nav class="sidebar__nav">
-    <ul class="sidebar__menu">
-      <li class="sidebar__item" *ngFor="let item of menuItems">
+    <ul class="menu">
+      <li *ngFor="let item of menuItems" class="menu__item">
+
+        <!-- Item padre con hijos (expandible) -->
+        <div
+          *ngIf="hasChildren(item)"
+          class="menu__header"
+          [class.menu__header--active]="item.active"
+          (click)="onMenuClick(item)">
+          <mat-icon class="menu__icon">{{ item.icon }}</mat-icon>
+          <span class="menu__label">{{ item.label }}</span>
+          <mat-icon class="menu__expand-icon" [class.menu__expand-icon--rotated]="isExpanded(item.id!)">
+            expand_more
+          </mat-icon>
+        </div>
+
+        <!-- Item sin hijos (navegable directamente) -->
         <a
-          class="sidebar__link"
-          [class.sidebar__link--active]="item.active"
+          *ngIf="!hasChildren(item)"
           [routerLink]="item.route"
-          (click)="onMenuClick(item)"
-          [title]="item.label"
-        >
-          <span class="sidebar__icon material-icons">{{ item.icon }}</span>
-          <span class="sidebar__label" *ngIf="isOpen">{{ item.label }}</span>
+          class="menu__link"
+          [class.menu__link--active]="item.active"
+          (click)="onMenuClick(item)">
+          <mat-icon class="menu__icon">{{ item.icon }}</mat-icon>
+          <span class="menu__label">{{ item.label }}</span>
         </a>
+
+        <!-- Submenu (solo 2 niveles, los hijos son directamente navegables) -->
+        <ul *ngIf="hasChildren(item) && isExpanded(item.id!)" class="submenu">
+          <li *ngFor="let child of item.children" class="submenu__item">
+            <a
+              [routerLink]="child.route"
+              class="submenu__link"
+              [class.submenu__link--active]="child.active"
+              (click)="onChildClick(item, child)">
+              <mat-icon class="submenu__icon">{{ child.icon }}</mat-icon>
+              <span class="submenu__label">{{ child.label }}</span>
+            </a>
+          </li>
+        </ul>
+
       </li>
     </ul>
   </nav>
+
+  <button (click)="onToggle()" class="sidebar__toggle">
+    <mat-icon>{{ isOpen ? 'chevron_left' : 'chevron_right' }}</mat-icon>
+  </button>
 </aside>

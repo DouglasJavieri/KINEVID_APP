@@ -5,6 +5,7 @@ import { RouterModule } from '@angular/router';
 import {SidebarComponent} from "./components/sidebar/sidebar.component";
 import {NavbarComponent} from "./components/navbar/navbar.component";
 import {MainLayoutComponent} from "./main-layout/main-layout.component";
+import {MatIconModule} from "@angular/material/icon";
 
 @NgModule({
   declarations: [
@@ -14,7 +15,8 @@ import {MainLayoutComponent} from "./main-layout/main-layout.component";
   ],
   imports: [
     CommonModule,
-    RouterModule
+    RouterModule,
+    MatIconModule
   ],
   exports: [
     SidebarComponent,
