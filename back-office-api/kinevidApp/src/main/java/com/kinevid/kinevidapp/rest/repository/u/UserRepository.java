@@ -36,5 +36,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
             "AND u.username = :username ")
     Optional<UsernameResponseDto> findByUsername (@Param("username") String username);
 
+    Optional<User> findById(Long id);
 
 }
