@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * @author Douglas Cristhian Javieri Vino
@@ -24,5 +25,12 @@ public interface RolePermissionRepository extends JpaRepository<RolePermission,L
             "WHERE rp.role.id = :roleId AND rp.permission.id = :permissionId AND rp.deleted = false")
     boolean existsByRoleIdAndPermissionId(@Param("roleId") Long roleId,
                                           @Param("permissionId") Long permissionId);
+
+    @Query("SELECT rp " +
+            "FROM RolePermission rp " +
+            "WHERE rp.role.id = :roleId AND rp.permission.id = :permissionId AND rp.deleted = false")
+    Optional<RolePermission> findByRoleIdAndPermissionId(@Param("roleId") Long roleId,
+                                                         @Param("permissionId") Long permissionId);
+
 
 }
