@@ -2,6 +2,8 @@ package com.kinevid.kinevidapp.config.security;
 
 
 
+import com.kinevid.kinevidapp.config.security.exception.JwtTokenExpiredException;
+import com.kinevid.kinevidapp.config.security.exception.JwtTokenInvalidException;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -13,6 +15,8 @@ import org.springframework.stereotype.Component;
 
 import java.security.Key;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Douglas Cristhian Javieri Vino
@@ -21,45 +25,135 @@ import java.util.Date;
 @Component
 @Slf4j
 public class JwtUtils {
+
     @Value("${kinevid.app.jwtSecret}")
     private String jwtSecret;
 
-    @Value("${kinevid.app.jwtExpirationMs}")
-    private int jwtExpirationMs;
+    @Value("${kinevid.app.jwtAccessTokenExpirationMs}")
+    private long jwtAccessTokenExpirationMs;
 
-    public String generateJwtToken(Authentication authentication) {
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        return Jwts.builder()
-                .setSubject((userDetails.getUsername()))
-                .setIssuedAt(new Date())
-                .setExpiration(new Date((new Date()).getTime() + jwtExpirationMs))
-                .signWith(key(), SignatureAlgorithm.HS256)
-                .compact();
-    }
+    @Value("${kinevid.app.jwtRefreshTokenExpirationMs}")
+    private long jwtRefreshTokenExpirationMs;
 
     private Key key() {
         return Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecret));
     }
 
-    public  String getUserNameFromJwtToken(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(key())
-                .build()
-                .parseClaimsJws(token)
-                .getBody()
-                .getSubject();
+    public String generateAccessToken(Authentication authentication) {
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        return generateAccessToken(userDetails.getUsername());
     }
 
-    public boolean validateJwtToken(String authToken) {
+    public String generateAccessToken(String username) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("type", "ACCESS");
+
+        return Jwts.builder()
+                .setClaims(claims)
+                .setSubject(username)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + jwtAccessTokenExpirationMs))
+                .signWith(key(), SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    public String generateRefreshToken(String username) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("type", "REFRESH");
+
+        return Jwts.builder()
+                .setClaims(claims)
+                .setSubject(username)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + jwtRefreshTokenExpirationMs))
+                .signWith(key(), SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    public String getUsernameFromAccessToken(String token) {
+        return getUsernameFromToken(token, "ACCESS");
+    }
+
+    public String getUsernameFromRefreshToken(String token) {
+        return getUsernameFromToken(token, "REFRESH");
+    }
+
+    private String getUsernameFromToken(String token, String expectedType) {
         try {
-            Jwts.parserBuilder()
+            Claims claims = Jwts.parserBuilder()
                     .setSigningKey(key())
                     .build()
-                    .parseClaimsJws(authToken);
-            return true;
+                    .parseClaimsJws(token)
+                    .getBody();
+
+            String tokenType = (String) claims.get("type");
+            if (tokenType == null || !tokenType.equals(expectedType)) {
+                throw new JwtTokenInvalidException(
+                        "Tipo de token inválido. Esperado: " + expectedType +
+                                ", Recibido: " + tokenType);
+            }
+
+            return claims.getSubject();
+        } catch (ExpiredJwtException e) {
+            throw new JwtTokenExpiredException("Token expirado", e);
         } catch (JwtException e) {
-            log.error("Token inválido: {}", e.getMessage());
+            throw new JwtTokenInvalidException("Token inválido", e);
+        }
+    }
+
+    public boolean validateAccessToken(String token) {
+        return validateToken(token, "ACCESS");
+    }
+
+    public boolean validateRefreshToken(String token) {
+        return validateToken(token, "REFRESH");
+    }
+
+    private boolean validateToken(String authToken, String expectedType) {
+        try {
+            Claims claims = Jwts.parserBuilder()
+                    .setSigningKey(key())
+                    .build()
+                    .parseClaimsJws(authToken)
+                    .getBody();
+
+            String tokenType = (String) claims.get("type");
+            if (tokenType == null || !tokenType.equals(expectedType)) {
+                log.warn("Tipo de token inválido. Esperado: {}, Recibido: {}", expectedType, tokenType);
+                return false;
+            }
+
+            return true;
+        } catch (ExpiredJwtException e) {
+            log.warn("Token expirado: {}", e.getMessage());
+        } catch (UnsupportedJwtException e) {
+            log.error("JWT no soportado: {}", e.getMessage());
+        } catch (MalformedJwtException e) {
+            log.error("JWT con formato inválido: {}", e.getMessage());
+        } catch (SignatureException e) {
+            log.error("Firma JWT inválida: {}", e.getMessage());
+        } catch (IllegalArgumentException e) {
+            log.error("Argumentos JWT inválidos: {}", e.getMessage());
+        } catch (JwtException e) {
+            log.error("Error JWT: {}", e.getMessage());
         }
         return false;
     }
+
+    public long getExpirationTimeMs(String token) {
+        try {
+            Claims claims = Jwts.parserBuilder()
+                    .setSigningKey(key())
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+
+            return claims.getExpiration().getTime() - System.currentTimeMillis();
+        } catch (JwtException e) {
+            log.error("Error al obtener tiempo de expiración: {}", e.getMessage());
+            return 0;
+        }
+    }
+
+
 }

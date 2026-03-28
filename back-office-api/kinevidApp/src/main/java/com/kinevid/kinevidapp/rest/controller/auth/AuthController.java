@@ -56,7 +56,7 @@ public class AuthController {
                             request.getPassword()
                     ));
 
-            String jwt = jwtUtils.generateJwtToken(authentication);
+            String jwt = jwtUtils.generateAccessToken(authentication);
 
             JwtResponseDto response = new JwtResponseDto(jwt);
 
