@@ -156,4 +156,20 @@ public class JwtUtils {
     }
 
 
+    /**
+     * Obtiene el tiempo de expiración en milisegundos del Access Token
+     * @return Tiempo de expiración en ms
+     */
+    public long getAccessTokenExpirationTime() {
+        return jwtAccessTokenExpirationMs;
+    }
+
+    /**
+     * Obtiene el tiempo de expiración en milisegundos del Refresh Token
+     * @return Tiempo de expiración en ms
+     */
+    public long getRefreshTokenExpirationTime() {
+        return jwtRefreshTokenExpirationMs;
+    }
+
 }
