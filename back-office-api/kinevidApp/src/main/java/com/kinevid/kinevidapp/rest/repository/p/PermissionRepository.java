@@ -1,6 +1,8 @@
 package com.kinevid.kinevidapp.rest.repository.p;
 
 import com.kinevid.kinevidapp.rest.model.entity.p.Permission;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -21,7 +23,14 @@ public interface PermissionRepository extends JpaRepository<Permission, Long> {
             "AND p.name = :name")
     boolean existsPermissionByName(@Param("name") String name);
 
-    @Query("SELECT p FROM Permission p WHERE p.deleted = false AND p.name = :name")
+    @Query("SELECT p " +
+            "FROM Permission p " +
+            "WHERE p.deleted = false AND p.name = :name")
     Optional<Permission> findByName(@Param("name") String name);
+
+    @Query("SELECT p " +
+            "FROM Permission p " +
+            "WHERE p.deleted = false ")
+    Page<Permission> findAll(Pageable pageable);
 
 }

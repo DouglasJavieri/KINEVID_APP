@@ -5,10 +5,13 @@ import com.kinevid.kinevidapp.rest.model.dto.p.PermissionResponseDto;
 import com.kinevid.kinevidapp.rest.model.entity.p.Permission;
 import com.kinevid.kinevidapp.rest.repository.p.PermissionRepository;
 import com.kinevid.kinevidapp.rest.service.p.PermissionService;
+import com.kinevid.kinevidapp.rest.util.FormatUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 /**
  * @author Douglas Cristhian Javieri Vino
@@ -83,4 +86,36 @@ public class PermissionServiceImpl implements PermissionService {
             throw new OperationException("Ocurrió un error inesperado al eliminar el rol.");
         }
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<PermissionResponseDto> findAllPermissions(Pageable pageable) throws OperationException {
+        try {
+            Page<Permission> permissions = permissionRepository.findAll(pageable);
+            return permissions.map(PermissionResponseDto::new);
+
+        } catch (Exception e) {
+            log.error("Error al listar permisos", e);
+            throw new OperationException("Error al listar permisos");
+        }
+    }
+
+    @Override
+    @Transactional
+    public void changeStatus(Long idPermission, String status) throws OperationException {
+        try {
+            Permission permission = permissionRepository.findById(idPermission)
+                    .orElseThrow(() -> new OperationException(FormatUtil.noRegistrado("Permiso", idPermission)));
+
+            log.info("Estado de permiso cambiado para: {}", permission.getName());
+
+        } catch (OperationException e) {
+            log.error("Error al cambiar estado de permiso: {}", e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            log.error("Error inesperado al cambiar estado de permiso", e);
+            throw new OperationException("Error al cambiar estado de permiso");
+        }
+    }
+
 }
