@@ -3,10 +3,7 @@ package com.kinevid.kinevidapp.rest.controller.auth;
 import com.kinevid.kinevidapp.rest.constants.ApiConstants;
 import com.kinevid.kinevidapp.rest.exception.ApiResponseException;
 import com.kinevid.kinevidapp.rest.exception.OperationException;
-import com.kinevid.kinevidapp.rest.model.dto.auth.JwtResponseDto;
-import com.kinevid.kinevidapp.rest.model.dto.auth.LoginRequestDto;
-import com.kinevid.kinevidapp.rest.model.dto.auth.LogoutRequestDto;
-import com.kinevid.kinevidapp.rest.model.dto.auth.RefreshTokenRequestDto;
+import com.kinevid.kinevidapp.rest.model.dto.auth.*;
 import com.kinevid.kinevidapp.rest.response.ResponseBody;
 import com.kinevid.kinevidapp.rest.service.auth.AuthService;
 import com.kinevid.kinevidapp.rest.util.ApiUtil;
@@ -147,4 +144,35 @@ public class AuthController {
             throw ApiResponseException.serverError(ApiConstants.INTERNAL_SERVER_ERROR);
         }
     }
+
+    @PostMapping("/change-password")
+    @Operation(
+            summary = "Cambiar contraseña",
+            description = "Cambia la contraseña del usuario autenticado. Revoca todos los tokens.",
+            tags = {"auth"},
+            responses = {
+                    @ApiResponse(description = "Éxito", responseCode = "200", content = @Content(mediaType = "application/json")),
+                    @ApiResponse(responseCode = "400", description = "Validación fallida", content = @Content),
+                    @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content),
+                    @ApiResponse(responseCode = "500", description = "Error interno", content = @Content)
+            }, security = @SecurityRequirement(name = "bearerToken"))
+    public ResponseEntity<ResponseBody<Void>> changePassword(@Valid @RequestBody ChangePasswordRequestDto changePasswordRequest) {
+        try {
+            authService.changePassword(changePasswordRequest);
+            ResponseBody<Void> response = ResponseBody.<Void>builder()
+                    .code(ApiConstants.OK_CODE)
+                    .message("Contraseña cambiada. Inicie sesión nuevamente.")
+                    .data(null)
+                    .build();
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+
+        } catch (OperationException e) {
+            log.warn("Error cambiar contraseña: {}", e.getMessage());
+            throw ApiResponseException.badRequest(e.getMessage());
+        } catch (Exception e) {
+            log.error("Error inesperado cambiar contraseña", e);
+            throw ApiResponseException.serverError(ApiConstants.INTERNAL_SERVER_ERROR);
+        }
+    }
+
 }

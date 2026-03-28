@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * @author Douglas Cristhian Javieri Vino
@@ -24,7 +25,7 @@ public class UserRoleServiceImpl implements UserRoleService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<Role> findRolesByUserId(Long idUser) {
+    public List<Role> findRolesByUserId(Long idUser) throws OperationException {
         try {
             return userRoleRepository.findRolesByUserId(idUser);
         } catch (Exception e) {
@@ -32,4 +33,20 @@ public class UserRoleServiceImpl implements UserRoleService {
             throw new OperationException("Error al buscar roles para el usuario", e.getCause());
         }
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<String> getPrimaryRoleNameByUserId(Long userId) {
+        try {
+            List<Role> roles = userRoleRepository.findRolesByUserId(userId);
+            if (roles != null && !roles.isEmpty()) {
+                return Optional.of(roles.get(0).getName());
+            }
+            return Optional.empty();
+        } catch (Exception e) {
+            log.error("Error al obtener rol principal para usuario ID: {}", userId, e);
+            return Optional.empty();
+        }
+    }
+
 }

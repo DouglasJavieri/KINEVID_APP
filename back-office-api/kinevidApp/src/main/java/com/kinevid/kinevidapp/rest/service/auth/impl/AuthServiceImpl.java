@@ -2,6 +2,7 @@ package com.kinevid.kinevidapp.rest.service.auth.impl;
 
 import com.kinevid.kinevidapp.config.security.JwtUtils;
 import com.kinevid.kinevidapp.rest.exception.OperationException;
+import com.kinevid.kinevidapp.rest.model.dto.auth.ChangePasswordRequestDto;
 import com.kinevid.kinevidapp.rest.model.dto.auth.JwtResponseDto;
 import com.kinevid.kinevidapp.rest.model.dto.auth.LoginRequestDto;
 import com.kinevid.kinevidapp.rest.model.dto.auth.RefreshTokenRequestDto;
@@ -10,22 +11,17 @@ import com.kinevid.kinevidapp.rest.model.entity.auth.User;
 import com.kinevid.kinevidapp.rest.repository.u.UserRepository;
 import com.kinevid.kinevidapp.rest.service.auth.AuthService;
 import com.kinevid.kinevidapp.rest.service.auth.RefreshTokenService;
+import com.kinevid.kinevidapp.rest.service.ur.UserRoleService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * @author Douglas Cristhian Javieri Vino
- * @created 27/03/2026
- * Implementación del servicio de autenticación
- * Gestiona login, refresh token y logout
- * Utiliza RefreshTokenService para la gestión de Refresh Tokens
- */
 @Service
 @Slf4j
 public class AuthServiceImpl implements AuthService {
@@ -42,16 +38,18 @@ public class AuthServiceImpl implements AuthService {
     @Autowired
     private RefreshTokenService refreshTokenService;
 
-    /**
-     * Autentica un usuario con username y password
-     */
+    @Autowired
+    private UserRoleService userRoleService;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     @Override
     @Transactional
     public JwtResponseDto login(LoginRequestDto loginRequest) throws OperationException {
         log.info("Intento de login para usuario: {}", loginRequest.getUsername());
 
         try {
-            // Paso 1: Autenticar credenciales contra la BD
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             loginRequest.getUsername(),
@@ -59,24 +57,21 @@ public class AuthServiceImpl implements AuthService {
                     )
             );
 
-            // Paso 2: Establecer autenticación en el contexto
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
-            // Paso 3: Cargar usuario de la BD
             User user = userRepository.findByUsernameAuthentication(loginRequest.getUsername())
                     .orElseThrow(() -> new OperationException("Usuario no encontrado"));
 
-            // Paso 4: Generar Access Token (corta duración)
             String accessToken = jwtUtils.generateAccessToken(user.getUsername());
             long accessTokenExpiresIn = jwtUtils.getAccessTokenExpirationTime();
 
-            // Paso 5: Crear y guardar Refresh Token en BD
-            // RefreshTokenService genera el JWT Y lo asigna a la entidad
             RefreshToken refreshToken = refreshTokenService.createRefreshToken(user, null, null);
 
-            log.info("Login exitoso para usuario: {}", user.getUsername());
+            String rolePrincipal = userRoleService.getPrimaryRoleNameByUserId(user.getId())
+                    .orElse("USER");
 
-            // Paso 6: Construir respuesta
+            log.info("Login exitoso para usuario: {} con rol: {}", user.getUsername(), rolePrincipal);
+
             return JwtResponseDto.builder()
                     .accessToken(accessToken)
                     .refreshToken(refreshToken.getToken())
@@ -87,27 +82,23 @@ public class AuthServiceImpl implements AuthService {
                             .username(user.getUsername())
                             .email(user.getEmail())
                             .fullName(user.getUsername())
-                            .role("USER")
+                            .role(rolePrincipal)
                             .build()
                     )
                     .build();
 
         } catch (org.springframework.security.core.AuthenticationException e) {
-            log.warn("Login fallido para usuario: {} - {}",
-                    loginRequest.getUsername(), e.getMessage());
+            log.warn("Login fallido para usuario: {} - {}", loginRequest.getUsername(), e.getMessage());
             throw new OperationException("Credenciales inválidas. Verifique usuario y contraseña");
         } catch (OperationException e) {
             log.warn("Error operacional en login: {}", e.getMessage());
             throw e;
         } catch (Exception e) {
-            log.error("Error genérico en login para usuario: {}", loginRequest.getUsername(), e);
+            log.error("Error inesperado en login", e);
             throw new OperationException("Error durante el login. Intente nuevamente");
         }
     }
 
-    /**
-     * Renueva el Access Token usando el Refresh Token
-     */
     @Override
     @Transactional
     public JwtResponseDto refreshAccessToken(RefreshTokenRequestDto refreshTokenRequest) throws OperationException {
@@ -116,32 +107,29 @@ public class AuthServiceImpl implements AuthService {
         try {
             String refreshTokenValue = refreshTokenRequest.getRefreshToken();
 
-            // Paso 1: Validar el JWT del Refresh Token usando JwtUtils
             if (!jwtUtils.validateRefreshToken(refreshTokenValue)) {
                 log.warn("Refresh Token JWT inválido o expirado");
                 throw new OperationException("Refresh Token inválido o expirado");
             }
 
-            // Paso 2: Validar el Refresh Token en BD usando RefreshTokenService
             if (!refreshTokenService.validateRefreshToken(refreshTokenValue)) {
-                log.warn("Refresh Token no válido en BD (revocado o expirado)");
+                log.warn("Refresh Token no válido en BD");
                 throw new OperationException("Refresh Token no válido");
             }
 
-            // Paso 3: Extraer username del Refresh Token
             String username = jwtUtils.getUsernameFromRefreshToken(refreshTokenValue);
 
-            // Paso 4: Cargar usuario
             User user = userRepository.findByUsernameAuthentication(username)
                     .orElseThrow(() -> new OperationException("Usuario no encontrado"));
 
-            // Paso 5: Generar nuevo Access Token
+            String rolePrincipal = userRoleService.getPrimaryRoleNameByUserId(user.getId())
+                    .orElse("USER");
+
             String newAccessToken = jwtUtils.generateAccessToken(user.getUsername());
             long accessTokenExpiresIn = jwtUtils.getAccessTokenExpirationTime();
 
             log.info("Access Token renovado para usuario: {}", username);
 
-            // Paso 6: Construir respuesta (sin nuevo Refresh Token)
             return JwtResponseDto.builder()
                     .accessToken(newAccessToken)
                     .tokenType("Bearer")
@@ -151,7 +139,7 @@ public class AuthServiceImpl implements AuthService {
                             .username(user.getUsername())
                             .email(user.getEmail())
                             .fullName(user.getUsername())
-                            .role("USER")
+                            .role(rolePrincipal)
                             .build()
                     )
                     .build();
@@ -164,9 +152,6 @@ public class AuthServiceImpl implements AuthService {
         }
     }
 
-    /**
-     * Realiza logout revocando el Refresh Token
-     */
     @Override
     @Transactional
     public void logout(String refreshToken) throws OperationException {
@@ -174,20 +159,57 @@ public class AuthServiceImpl implements AuthService {
 
         try {
             refreshTokenService.revokeToken(refreshToken);
-
-            log.info("Logout exitoso - Refresh Token revocado");
+            log.info("Logout exitoso");
 
         } catch (OperationException e) {
-
-            log.warn("Error al revocar Refresh Token en logout: {}", e.getMessage());
+            log.warn("Error al revocar token: {}", e.getMessage());
         } catch (Exception e) {
-            log.error("Error inesperado al realizar logout", e);
+            log.error("Error inesperado en logout", e);
         }
     }
 
-    /**
-     * Obtiene el usuario autenticado actualmente del contexto de seguridad
-     */
+    @Override
+    @Transactional
+    public void changePassword(ChangePasswordRequestDto changePasswordRequest) throws OperationException {
+        log.info("Intento de cambio de contraseña");
+
+        try {
+            User user = getCurrentUser();
+
+            if (!changePasswordRequest.getNewPassword()
+                    .equals(changePasswordRequest.getConfirmPassword())) {
+                log.warn("Las nuevas contraseñas no coinciden para usuario: {}", user.getUsername());
+                throw new OperationException("Las nuevas contraseñas no coinciden");
+            }
+
+            if (changePasswordRequest.getNewPassword()
+                    .equals(changePasswordRequest.getCurrentPassword())) {
+                log.warn("La nueva contraseña debe ser diferente a la actual");
+                throw new OperationException("La nueva contraseña debe ser diferente a la actual");
+            }
+
+            if (!passwordEncoder.matches(changePasswordRequest.getCurrentPassword(), user.getPassword())) {
+                log.warn("Contraseña actual incorrecta para usuario: {}", user.getUsername());
+                throw new OperationException("La contraseña actual es incorrecta");
+            }
+
+            String hashedNewPassword = passwordEncoder.encode(changePasswordRequest.getNewPassword());
+            user.setPassword(hashedNewPassword);
+            userRepository.save(user);
+            log.info("Contraseña cambiada para usuario: {}", user.getUsername());
+
+            refreshTokenService.revokeAllUserTokens(user.getId());
+            log.info("Todos los tokens revocados para usuario: {}", user.getUsername());
+
+        } catch (OperationException e) {
+            log.warn("Error en cambio de contraseña: {}", e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            log.error("Error inesperado al cambiar contraseña", e);
+            throw new OperationException("Error al cambiar la contraseña");
+        }
+    }
+
     @Override
     @Transactional(readOnly = true)
     public User getCurrentUser() throws OperationException {

@@ -19,10 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
-/**
- * @author Douglas Cristhian Javieri Vino
- * @created 15/02/2026
- */
 @Service
 @Slf4j
 public class UserServiceImpl implements UserService {
@@ -31,7 +27,6 @@ public class UserServiceImpl implements UserService {
     private UserRepository userRepository;
     @Autowired
     private PasswordEncoder passwordEncoder;
-
 
     @Override
     @Transactional(readOnly = true)
@@ -58,9 +53,7 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true)
     public boolean existsEmail(String email) {
         try {
-            String cleanEmail = email.trim();
-            cleanEmail = cleanEmail.replace(" ", "+");
-            cleanEmail = cleanEmail.toLowerCase();
+            String cleanEmail = email.trim().replace(" ", "+").toLowerCase();
             Optional<EmailResponseDto> emailModel = this.userRepository.findByEmail(cleanEmail);
             return emailModel.isPresent();
         } catch (Exception ex) {
@@ -76,8 +69,8 @@ public class UserServiceImpl implements UserService {
             ValidationUtil.throwExceptionIfInvalidText("Email", user.getEmail(), true, 50);
             ValidationUtil.throwExceptionIfInvalidText("Password", user.getPassword(), true, 100);
 
-            if((user.getEmail() == null || user.getEmail().isBlank()) && (user.getPassword() == null || user.getPassword().isBlank())) {
-                log.info("Campos email y contraseña vacíos");
+            if((user.getEmail() == null || user.getEmail().isBlank()) &&
+                    (user.getPassword() == null || user.getPassword().isBlank())) {
                 throw new OperationException("Campos email y contraseña vacíos");
             }
 
@@ -85,6 +78,7 @@ public class UserServiceImpl implements UserService {
             if(findByUsername.isPresent()) {
                 throw new OperationException(FormatUtil.yaRegistrado("Usuario", "Usuario", user.getUsername()));
             }
+
             Optional<EmailResponseDto> findByEmail = userRepository.findByEmail(user.getEmail());
             if(findByEmail.isPresent()) {
                 throw new OperationException(FormatUtil.yaRegistrado("Email", "Email", user.getEmail()));
@@ -100,11 +94,11 @@ public class UserServiceImpl implements UserService {
 
             return new UserResponseDto(userModel);
         } catch (OperationException e) {
-            log.error("Error de operación al crear al usuario {}", e.getMessage());
+            log.error("Error de operación al crear usuario: {}", e.getMessage());
             throw e;
         } catch (Exception e) {
-            log.error("Error generico al crear usuario", e);
-            throw new OperationException("Ocurrió un error inesperado al crear al usuario");
+            log.error("Error inesperado al crear usuario", e);
+            throw new OperationException("Ocurrió un error inesperado al crear usuario");
         }
     }
 
@@ -123,6 +117,7 @@ public class UserServiceImpl implements UserService {
             if(findByUsername.isPresent()) {
                 throw new OperationException(FormatUtil.yaRegistrado("Usuario", "Usuario", user.getUsername()));
             }
+
             Optional<EmailResponseDto> findByEmail = userRepository.findByEmail(user.getEmail());
             if(findByEmail.isPresent()) {
                 throw new OperationException(FormatUtil.yaRegistrado("Email", "Email", user.getEmail()));
@@ -137,11 +132,11 @@ public class UserServiceImpl implements UserService {
             userRepository.save(userModel);
             return new UserResponseDto(userModel);
         } catch (OperationException e) {
-            log.error("Error de operación al actualizar al usuario {}", e.getMessage());
+            log.error("Error de operación al actualizar usuario: {}", e.getMessage());
             throw e;
         } catch (Exception e) {
-            log.error("Error generico al actualizar usuario", e);
-            throw new OperationException("Ocurrió un error inesperado al actualizar al usuario");
+            log.error("Error inesperado al actualizar usuario", e);
+            throw new OperationException("Ocurrió un error inesperado al actualizar usuario");
         }
     }
 
@@ -155,11 +150,11 @@ public class UserServiceImpl implements UserService {
             userModel.setStatus(UserStatus.ELIMINATION);
             userRepository.save(userModel);
         } catch (OperationException e) {
-            log.error("Error de operación al eliminar un Usuario {}", e.getMessage());
+            log.error("Error de operación al eliminar usuario: {}", e.getMessage());
             throw e;
         } catch (Exception e) {
-            log.error("Error inesperado al eliminar Usuario {}", e.getMessage(), e);
-            throw new OperationException("Ocurrió un error inesperado al eliminar el Usuario.");
+            log.error("Error inesperado al eliminar usuario", e);
+            throw new OperationException("Ocurrió un error inesperado al eliminar usuario");
         }
     }
 }
