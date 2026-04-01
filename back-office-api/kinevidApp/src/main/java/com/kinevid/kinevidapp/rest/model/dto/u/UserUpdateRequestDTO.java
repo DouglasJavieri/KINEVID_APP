@@ -8,11 +8,11 @@ import lombok.Data;
 
 /**
  * @author Douglas Cristhian Javieri Vino
- * @created 16/02/2026
- * DTO para la creación de usuario. Todos los campos son obligatorios.
+ * @created 01/04/2026
+ * DTO para actualización de usuario.
  */
 @Data
-public class UserRequestDTO {
+public class UserUpdateRequestDTO {
 
     @NotBlank(message = "El nombre de usuario es requerido")
     @Size(min = 3, max = 30, message = "El nombre de usuario debe tener entre 3 y 30 caracteres")
@@ -24,7 +24,7 @@ public class UserRequestDTO {
     @Size(max = 50, message = "El email no puede superar los 50 caracteres")
     private String email;
 
-    @NotBlank(message = "La contraseña es requerida")
     @Size(min = 8, max = 100, message = "La contraseña debe tener entre 8 y 100 caracteres")
     private String password;
 }
+

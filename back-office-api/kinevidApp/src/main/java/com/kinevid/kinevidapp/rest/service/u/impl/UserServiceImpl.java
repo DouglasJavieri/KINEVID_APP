@@ -4,6 +4,7 @@ import com.kinevid.kinevidapp.rest.exception.OperationException;
 import com.kinevid.kinevidapp.rest.model.dto.u.EmailResponseDto;
 import com.kinevid.kinevidapp.rest.model.dto.u.UserRequestDTO;
 import com.kinevid.kinevidapp.rest.model.dto.u.UserResponseDto;
+import com.kinevid.kinevidapp.rest.model.dto.u.UserUpdateRequestDTO;
 import com.kinevid.kinevidapp.rest.model.dto.u.UsernameResponseDto;
 import com.kinevid.kinevidapp.rest.model.entity.auth.User;
 import com.kinevid.kinevidapp.rest.model.enums.auth.UserStatus;
@@ -11,22 +12,28 @@ import com.kinevid.kinevidapp.rest.repository.u.UserRepository;
 import com.kinevid.kinevidapp.rest.service.u.UserService;
 import com.kinevid.kinevidapp.rest.util.FormatUtil;
 import com.kinevid.kinevidapp.rest.util.ValidationUtil;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
+/**
+ * @author Douglas Cristhian Javieri Vino
+ * @created 15/02/2026
+ */
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     @Transactional(readOnly = true)
@@ -66,22 +73,19 @@ public class UserServiceImpl implements UserService {
     public UserResponseDto createUser(UserRequestDTO user) throws OperationException {
         try {
             ValidationUtil.throwExceptionIfInvalidText("Usuario", user.getUsername(), true, 30);
+            ValidationUtil.throwExceptionIfInvalidEmail("Email", user.getEmail(), true);
             ValidationUtil.throwExceptionIfInvalidText("Email", user.getEmail(), true, 50);
             ValidationUtil.throwExceptionIfInvalidText("Password", user.getPassword(), true, 100);
 
-            if((user.getEmail() == null || user.getEmail().isBlank()) &&
-                    (user.getPassword() == null || user.getPassword().isBlank())) {
-                throw new OperationException("Campos email y contraseña vacíos");
-            }
 
             Optional<UsernameResponseDto> findByUsername = userRepository.findByUsername(user.getUsername());
-            if(findByUsername.isPresent()) {
-                throw new OperationException(FormatUtil.yaRegistrado("Usuario", "Usuario", user.getUsername()));
+            if (findByUsername.isPresent()) {
+                throw new OperationException(FormatUtil.yaRegistrado("Usuario", "Username", user.getUsername()));
             }
 
-            Optional<EmailResponseDto> findByEmail = userRepository.findByEmail(user.getEmail());
-            if(findByEmail.isPresent()) {
-                throw new OperationException(FormatUtil.yaRegistrado("Email", "Email", user.getEmail()));
+            Optional<EmailResponseDto> findByEmail = userRepository.findByEmail(user.getEmail().trim().toLowerCase());
+            if (findByEmail.isPresent()) {
+                throw new OperationException(FormatUtil.yaRegistrado("Usuario", "Email", user.getEmail()));
             }
 
             User userModel = User.builder()
@@ -92,7 +96,9 @@ public class UserServiceImpl implements UserService {
                     .build();
             userRepository.save(userModel);
 
+            log.info("Usuario creado: {}", userModel.getUsername());
             return new UserResponseDto(userModel);
+
         } catch (OperationException e) {
             log.error("Error de operación al crear usuario: {}", e.getMessage());
             throw e;
@@ -103,40 +109,118 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @Transactional
-    public UserResponseDto updateUser(Long id, UserRequestDTO user) throws OperationException {
+    @Transactional(readOnly = true)
+    public UserResponseDto getUserById(Long id) throws OperationException {
         try {
-            ValidationUtil.throwExceptionIfInvalidText("Usuario", user.getUsername(), true, 30);
-            ValidationUtil.throwExceptionIfInvalidText("Email", user.getEmail(), true, 50);
-            ValidationUtil.throwExceptionIfInvalidText("Password", user.getPassword(), true, 100);
+            User user = userRepository.findById(id)
+                    .orElseThrow(() -> new OperationException(FormatUtil.noRegistrado("Usuario", id)));
 
-            User userModel = userRepository.findById(id)
-                    .orElseThrow(() -> new OperationException("Usuario no encontrado"));
-
-            Optional<UsernameResponseDto> findByUsername = userRepository.findByUsername(user.getUsername());
-            if(findByUsername.isPresent()) {
-                throw new OperationException(FormatUtil.yaRegistrado("Usuario", "Usuario", user.getUsername()));
+            if (user.isDeleted()) {
+                throw new OperationException(FormatUtil.noRegistrado("Usuario", id));
             }
 
-            Optional<EmailResponseDto> findByEmail = userRepository.findByEmail(user.getEmail());
-            if(findByEmail.isPresent()) {
-                throw new OperationException(FormatUtil.yaRegistrado("Email", "Email", user.getEmail()));
+            return new UserResponseDto(user);
+
+        } catch (OperationException e) {
+            log.error("Error al buscar usuario con ID {}: {}", id, e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            log.error("Error inesperado al buscar usuario con ID {}", id, e);
+            throw new OperationException("Ocurrió un error inesperado al buscar el usuario");
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<UserResponseDto> getAllUsers(Pageable pageable) throws OperationException {
+        try {
+            return userRepository.findAllActive(pageable)
+                    .map(UserResponseDto::new);
+        } catch (Exception e) {
+            log.error("Error inesperado al listar usuarios", e);
+            throw new OperationException("Ocurrió un error inesperado al listar usuarios");
+        }
+    }
+
+    @Override
+    @Transactional
+    public UserResponseDto updateUser(Long id, UserUpdateRequestDTO user) throws OperationException {
+        try {
+            ValidationUtil.throwExceptionIfInvalidText("Usuario", user.getUsername(), true, 30);
+            ValidationUtil.throwExceptionIfInvalidEmail("Email", user.getEmail(), true);
+            ValidationUtil.throwExceptionIfInvalidText("Email", user.getEmail(), true, 50);
+            ValidationUtil.throwExceptionIfInvalidText("Password", user.getPassword(), false, 100);
+
+            User userModel = userRepository.findById(id)
+                    .orElseThrow(() -> new OperationException(FormatUtil.noRegistrado("Usuario", id)));
+
+            if (userModel.isDeleted()) {
+                throw new OperationException(FormatUtil.noRegistrado("Usuario", id));
+            }
+
+            // Validación de duplicados excluyendo al propio usuario
+            Optional<UsernameResponseDto> findByUsername = userRepository.findByUsernameExcludingId(user.getUsername(), id);
+            if (findByUsername.isPresent()) {
+                throw new OperationException(FormatUtil.yaRegistrado("Usuario", "Username", user.getUsername()));
+            }
+
+            Optional<EmailResponseDto> findByEmail = userRepository.findByEmailExcludingId(user.getEmail().trim().toLowerCase(), id);
+            if (findByEmail.isPresent()) {
+                throw new OperationException(FormatUtil.yaRegistrado("Usuario", "Email", user.getEmail()));
             }
 
             userModel.setUsername(user.getUsername().toLowerCase().trim());
             userModel.setEmail(user.getEmail().toLowerCase().trim());
 
-            if(user.getPassword() != null && !user.getPassword().isBlank()) {
+            if (user.getPassword() != null && !user.getPassword().isBlank()) {
                 userModel.setPassword(passwordEncoder.encode(user.getPassword()));
             }
+
             userRepository.save(userModel);
+            log.info("Usuario actualizado: ID={}", id);
             return new UserResponseDto(userModel);
+
         } catch (OperationException e) {
-            log.error("Error de operación al actualizar usuario: {}", e.getMessage());
+            log.error("Error de operación al actualizar usuario con ID {}: {}", id, e.getMessage());
             throw e;
         } catch (Exception e) {
-            log.error("Error inesperado al actualizar usuario", e);
+            log.error("Error inesperado al actualizar usuario con ID {}", id, e);
             throw new OperationException("Ocurrió un error inesperado al actualizar usuario");
+        }
+    }
+
+    @Override
+    @Transactional
+    public UserResponseDto changeUserStatus(Long id, UserStatus status) throws OperationException {
+        try {
+            if (status == UserStatus.ELIMINATION) {
+                throw new OperationException(
+                        "No se puede establecer el estado ELIMINATION directamente. Use el endpoint de eliminación.");
+            }
+
+            User user = userRepository.findById(id)
+                    .orElseThrow(() -> new OperationException(FormatUtil.noRegistrado("Usuario", id)));
+
+            if (user.isDeleted()) {
+                throw new OperationException(FormatUtil.noRegistrado("Usuario", id));
+            }
+
+            if (user.getStatus() == status) {
+                throw new OperationException(
+                        "El usuario ya se encuentra en el estado '" + status.getDescription() + "'.");
+            }
+
+            user.setStatus(status);
+            userRepository.save(user);
+            log.info("Estado del usuario ID={} cambiado a: {}", id, status);
+            return new UserResponseDto(user);
+
+        } catch (OperationException e) {
+            log.error("Error al cambiar estado del usuario con ID {}: {}", id, e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            log.error("Error inesperado al cambiar estado del usuario con ID {}", id, e);
+            throw new OperationException("Ocurrió un error inesperado al cambiar el estado del usuario");
         }
     }
 
@@ -146,14 +230,21 @@ public class UserServiceImpl implements UserService {
         try {
             User userModel = userRepository.findById(id)
                     .orElseThrow(() -> new OperationException(FormatUtil.noRegistrado("Usuario", id)));
+
+            if (userModel.isDeleted()) {
+                throw new OperationException(FormatUtil.noRegistrado("Usuario", id));
+            }
+
             userModel.setDeleted(true);
             userModel.setStatus(UserStatus.ELIMINATION);
             userRepository.save(userModel);
+            log.info("Usuario con ID={} eliminado lógicamente", id);
+
         } catch (OperationException e) {
-            log.error("Error de operación al eliminar usuario: {}", e.getMessage());
+            log.error("Error de operación al eliminar usuario con ID {}: {}", id, e.getMessage());
             throw e;
         } catch (Exception e) {
-            log.error("Error inesperado al eliminar usuario", e);
+            log.error("Error inesperado al eliminar usuario con ID {}", id, e);
             throw new OperationException("Ocurrió un error inesperado al eliminar usuario");
         }
     }

@@ -3,20 +3,30 @@ package com.kinevid.kinevidapp.rest.controller.u;
 import com.kinevid.kinevidapp.rest.constants.ApiConstants;
 import com.kinevid.kinevidapp.rest.exception.ApiResponseException;
 import com.kinevid.kinevidapp.rest.exception.OperationException;
+import com.kinevid.kinevidapp.rest.model.dto.u.ChangeUserStatusRequestDTO;
 import com.kinevid.kinevidapp.rest.model.dto.u.UserRequestDTO;
 import com.kinevid.kinevidapp.rest.model.dto.u.UserResponseDto;
+import com.kinevid.kinevidapp.rest.model.dto.u.UserUpdateRequestDTO;
 import com.kinevid.kinevidapp.rest.response.ResponseBody;
+import com.kinevid.kinevidapp.rest.response.ResponsePage;
 import com.kinevid.kinevidapp.rest.service.u.UserService;
 import com.kinevid.kinevidapp.rest.util.ApiUtil;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import static org.springframework.http.ResponseEntity.ok;
@@ -28,15 +38,16 @@ import static org.springframework.http.ResponseEntity.ok;
 @Slf4j
 @RestController
 @RequestMapping("/api/user")
-@Tag(name = "users")
+@Tag(name = "users", description = "Gestión de usuarios del sistema")
+@RequiredArgsConstructor
 public class UserController {
 
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
 
     @PostMapping("/create")
-    @Operation(summary = "Crear un nuevo registro usuario",
-            description = "Registra un nuevo usuario en el sistema",
+    @PreAuthorize("hasAuthority('CREATE_USER')")
+    @Operation(summary = "Crear un nuevo usuario",
+            description = "Registra un nuevo usuario en el sistema. Requiere permiso CREATE_USER.",
             tags = {"users"},
             responses = {
                     @ApiResponse(description = "Operación satisfactorio", responseCode = "200", content = @Content(mediaType = "application/json")),
@@ -45,23 +56,86 @@ public class UserController {
                     @ApiResponse(responseCode = "401", description = "Fallo de autentificación", content = @Content(schema = @Schema(hidden = true))),
                     @ApiResponse(responseCode = "403", description = "Acceso Denegado", content = @Content(schema = @Schema(hidden = true))),
             }, security = @SecurityRequirement(name = "bearerToken"))
-    public ResponseEntity<ResponseBody<UserResponseDto>> createUser(@RequestBody UserRequestDTO user) {
+    public ResponseEntity<ResponseBody<UserResponseDto>> createUser(@Valid @RequestBody UserRequestDTO user) {
         try {
             UserResponseDto createdUser = userService.createUser(user);
-            return ok(ApiUtil.buildResponseWithDefaults(createdUser));
+            ResponseBody<UserResponseDto> response = ApiUtil.buildSuccessResponse(
+                    createdUser, "Usuario creado exitosamente.");
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
 
         } catch (OperationException e) {
-            log.error("Error: Se produjo un error controlado al ejecutar el servicio, Mensaje: {}", e.getMessage());
+            log.error("Error al crear usuario: {}", e.getMessage());
             throw ApiResponseException.badRequest(e.getMessage());
         } catch (Exception e) {
-            log.error("Error: Se produjo un error genérico al ejecutar el servicio: ", e);
+            log.error("Error inesperado al crear usuario", e);
+            throw ApiResponseException.serverError(ApiConstants.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('VIEW_USER')")
+    @Operation(summary = "Obtener usuario por ID",
+            description = "Retorna los datos de un usuario activo por su ID. Requiere permiso VIEW_USER.",
+            tags = {"users"},
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Usuario encontrado",
+                            content = @Content(mediaType = "application/json")),
+                    @ApiResponse(responseCode = "400", description = "Usuario no encontrado o eliminado",
+                            content = @Content),
+                    @ApiResponse(responseCode = "401", description = "No autenticado",
+                            content = @Content(schema = @Schema(hidden = true))),
+                    @ApiResponse(responseCode = "403", description = "Sin permiso VIEW_USER",
+                            content = @Content(schema = @Schema(hidden = true)))
+            }, security = @SecurityRequirement(name = "bearerToken"))
+    public ResponseEntity<ResponseBody<UserResponseDto>> getUserById(
+            @PathVariable Long id) {
+        try {
+            UserResponseDto user = userService.getUserById(id);
+            return ok(ApiUtil.buildResponseWithDefaults(user));
+
+        } catch (OperationException e) {
+            log.error("Error al obtener usuario con ID {}: {}", id, e.getMessage());
+            throw ApiResponseException.badRequest(e.getMessage());
+        } catch (Exception e) {
+            log.error("Error inesperado al obtener usuario con ID {}", id, e);
+            throw ApiResponseException.serverError(ApiConstants.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+
+    @GetMapping("/list")
+    @PreAuthorize("hasAuthority('LIST_USER')")
+    @Operation(summary = "Listar usuarios con paginación",
+            description = "Retorna una lista paginada de usuarios activos. Requiere permiso LIST_USER.",
+            tags = {"users"},
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Lista obtenida exitosamente", content = @Content(mediaType = "application/json")),
+                    @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content(schema = @Schema(hidden = true))),
+                    @ApiResponse(responseCode = "403", description = "Sin permiso LIST_USER", content = @Content(schema = @Schema(hidden = true)))
+            }, security = @SecurityRequirement(name = "bearerToken"))
+    public ResponseEntity<ResponseBody<Page<UserResponseDto>>> getAllUsers(@RequestParam("page") int page,
+                                                                           @RequestParam("size") int size,
+                                                                           @RequestParam(value = "sortBy", defaultValue = "id") String sortBy,
+                                                                           @RequestParam(value = "sortDir", defaultValue = "DESC") Sort.Direction sortDir) {
+        try {
+            Pageable pageable = ApiUtil.buildPageableWithSort(page, size, sortBy, sortDir);
+            Page<UserResponseDto> usersPage = userService.getAllUsers(pageable);
+
+            return ok(ApiUtil.buildResponseWithDefaults(usersPage));
+        } catch (OperationException e) {
+            log.error("Error al listar usuarios: {}", e.getMessage());
+            throw ApiResponseException.badRequest(e.getMessage());
+        } catch (Exception e) {
+            log.error("Error inesperado al listar usuarios", e);
             throw ApiResponseException.serverError(ApiConstants.INTERNAL_SERVER_ERROR);
         }
     }
 
     @PutMapping("/update/{id}")
+    @PreAuthorize("hasAuthority('UPDATE_USER')")
     @Operation(summary = "Actualizar usuario",
-            description = "Actualiza los datos de un usuario existente validando que el username y email no estén duplicados.",
+            description = "Actualiza los datos de un usuario existente. La contraseña es opcional: si no se envía, no se modifica. Requiere permiso UPDATE_USER.",
             tags = {"users"},
             responses = {
                     @ApiResponse(description = "Usuario actualizado con éxito", responseCode = "200", content = @Content(mediaType = "application/json")),
@@ -69,23 +143,59 @@ public class UserController {
                     @ApiResponse(responseCode = "401", description = "Fallo de autentificación", content = @Content(schema = @Schema(hidden = true))),
                     @ApiResponse(responseCode = "404", description = "Usuario no encontrado", content = @Content)
             }, security = @SecurityRequirement(name = "bearerToken"))
-    public ResponseEntity<ResponseBody<UserResponseDto>> updateUser(@PathVariable Long id, @RequestBody UserRequestDTO user) {
+    public ResponseEntity<ResponseBody<UserResponseDto>> updateUser(@PathVariable Long id, @Valid @RequestBody UserUpdateRequestDTO user) {
         try {
             UserResponseDto updatedUser = userService.updateUser(id, user);
-            return ResponseEntity.ok(ApiUtil.buildResponseWithDefaults(updatedUser));
+            return ok(ApiUtil.buildSuccessResponse(updatedUser, "Usuario actualizado exitosamente."));
 
         } catch (OperationException e) {
-            log.error("Error: Operación controlada al actualizar usuario con ID {}: {}", id, e.getMessage());
+            log.error("Error al actualizar usuario con ID {}: {}", id, e.getMessage());
             throw ApiResponseException.badRequest(e.getMessage());
         } catch (Exception e) {
-            log.error("Error: Excepción genérica al actualizar usuario con ID {}: ", id, e);
+            log.error("Error inesperado al actualizar usuario con ID {}", id, e);
+            throw ApiResponseException.serverError(ApiConstants.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    // ─── CHANGE STATUS ─────────────────────────────────────────────────────────
+
+    @PatchMapping("/{id}/status")
+    @PreAuthorize("hasAuthority('CHANGE_USER_STATUS')")
+    @Operation(summary = "Cambiar estado de usuario",
+            description = "Cambia el estado de un usuario entre ACTIVE e INACTIVE. " +
+                    "Para eliminar use el endpoint DELETE. Requiere permiso CHANGE_USER_STATUS.",
+            tags = {"users"},
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Estado cambiado exitosamente",
+                            content = @Content(mediaType = "application/json")),
+                    @ApiResponse(responseCode = "400", description = "Estado inválido o usuario no encontrado",
+                            content = @Content),
+                    @ApiResponse(responseCode = "401", description = "No autenticado",
+                            content = @Content(schema = @Schema(hidden = true))),
+                    @ApiResponse(responseCode = "403", description = "Sin permiso CHANGE_USER_STATUS",
+                            content = @Content(schema = @Schema(hidden = true)))
+            }, security = @SecurityRequirement(name = "bearerToken"))
+    public ResponseEntity<ResponseBody<UserResponseDto>> changeUserStatus(
+            @PathVariable Long id,
+            @Valid @RequestBody ChangeUserStatusRequestDTO request) {
+        try {
+            UserResponseDto updatedUser = userService.changeUserStatus(id, request.getStatus());
+            return ok(ApiUtil.buildSuccessResponse(
+                    updatedUser, "Estado del usuario cambiado exitosamente."));
+
+        } catch (OperationException e) {
+            log.error("Error al cambiar estado del usuario con ID {}: {}", id, e.getMessage());
+            throw ApiResponseException.badRequest(e.getMessage());
+        } catch (Exception e) {
+            log.error("Error inesperado al cambiar estado del usuario con ID {}", id, e);
             throw ApiResponseException.serverError(ApiConstants.INTERNAL_SERVER_ERROR);
         }
     }
 
     @DeleteMapping("/delete/{id}")
-    @Operation(summary = "Eliminar usuario",
-            description = "Realiza una eliminación lógica del usuario cambiando su estado a ELIMINATION y marcando deleted como true.",
+    @PreAuthorize("hasAuthority('DELETE_USER')")
+    @Operation(summary = "Eliminar usuario (lógico)",
+            description = "Eliminación lógica: marca deleted=true y estado ELIMINATION. Requiere permiso DELETE_USER.",
             tags = {"users"},
             responses = {
                     @ApiResponse(description = "Usuario eliminado con éxito", responseCode = "200", content = @Content(mediaType = "application/json")),
@@ -93,16 +203,17 @@ public class UserController {
                     @ApiResponse(responseCode = "401", description = "Fallo de autentificación", content = @Content(schema = @Schema(hidden = true))),
                     @ApiResponse(responseCode = "404", description = "Usuario no encontrado")
             }, security = @SecurityRequirement(name = "bearerToken"))
-    public ResponseEntity<ResponseBody<Boolean>> deleteUser(@PathVariable("id") Long id) {
+    public ResponseEntity<ResponseBody<Boolean>> deleteUser(
+            @PathVariable(value = "id") Long id) {
         try {
-            this.userService.deleteUser(id);
-            return ok(ApiUtil.buildResponseWithDefaults(true));
+            userService.deleteUser(id);
+            return ok(ApiUtil.buildSuccessResponse(true, "Usuario eliminado exitosamente."));
 
         } catch (OperationException e) {
-            log.error("Error: Operación controlada al eliminar usuario con ID {}: {}", id, e.getMessage());
+            log.error("Error al eliminar usuario con ID {}: {}", id, e.getMessage());
             throw ApiResponseException.badRequest(e.getMessage());
         } catch (Exception e) {
-            log.error("Error: Excepción genérica al eliminar usuario con ID {}: ", id, e);
+            log.error("Error inesperado al eliminar usuario con ID {}", id, e);
             throw ApiResponseException.serverError(ApiConstants.INTERNAL_SERVER_ERROR);
         }
     }

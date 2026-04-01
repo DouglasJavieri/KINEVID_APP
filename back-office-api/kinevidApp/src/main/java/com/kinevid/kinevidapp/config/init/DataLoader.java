@@ -14,6 +14,7 @@ import com.kinevid.kinevidapp.rest.repository.u.UserRepository;
 import com.kinevid.kinevidapp.rest.repository.ur.UserRoleRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -33,10 +34,17 @@ public class DataLoader implements CommandLineRunner {
     private final UserRoleRepository userRoleRepository;
     private final PasswordEncoder passwordEncoder;
 
-    private static final String ADMIN_USERNAME = "admin";
-    private static final String ADMIN_EMAIL = "douvan.22@gmail.com";
-    private static final String ADMIN_PASSWORD = "Abc123**";
-    private static final String ADMIN_ROLE_NAME = "ROLE_ADMIN";
+    @Value("${kinevid.app.admin.username}")
+    private String adminUsername;
+
+    @Value("${kinevid.app.admin.email}")
+    private String adminEmail;
+
+    @Value("${kinevid.app.admin.password}")
+    private String adminPassword;
+
+    @Value("${kinevid.app.admin.role}")
+    private String adminRoleName;
 
     @Override
     @Transactional
@@ -98,10 +106,10 @@ public class DataLoader implements CommandLineRunner {
     private Role createAdminRole(List<Permission> allPermissions) {
         log.info("Creando rol ADMIN");
 
-        Role adminRole = roleRepository.findByName(ADMIN_ROLE_NAME)
+        Role adminRole = roleRepository.findByName(adminRoleName)
                 .orElseGet(() -> {
                     Role newRole = Role.builder()
-                            .name(ADMIN_ROLE_NAME)
+                            .name(adminRoleName)
                             .description("Rol de administrador con acceso total")
                             .status(RoleStatus.ACTIVE)
                             .build();
@@ -129,19 +137,19 @@ public class DataLoader implements CommandLineRunner {
     private User createAdminUser() {
         log.info("Creando usuario admin");
 
-        User adminUser = userRepository.findByUsernameAuthentication(ADMIN_USERNAME)
+        User adminUser = userRepository.findByUsernameAuthentication(adminUsername)
                 .orElseGet(() -> {
-                    String hashedPassword = passwordEncoder.encode(ADMIN_PASSWORD);
+                    String hashedPassword = passwordEncoder.encode(adminPassword);
 
                     User newUser = User.builder()
-                            .username(ADMIN_USERNAME)
-                            .email(ADMIN_EMAIL)
+                            .username(adminUsername)
+                            .email(adminEmail)
                             .password(hashedPassword)
                             .status(UserStatus.ACTIVE)
                             .build();
 
                     User savedUser = userRepository.save(newUser);
-                    log.warn("Usuario admin creado - Contraseña: {}", ADMIN_PASSWORD);
+                    log.info("Usuario admin creado exitosamente");
                     return savedUser;
                 });
 
