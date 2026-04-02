@@ -1,0 +1,29 @@
+<form [formGroup]="formGroup" class="form-container">
+<mat-form-field  class="mc4-form-field">
+    <mat-label>{{field.label}}</mat-label>
+    <mat-select [formControlName]="field.name" [multiple]="field.multiple"
+        (opened)=" selectOpened(field.id)">
+        <mat-form-field >
+            <input matInput type="text" [id]="field.id" placeholder="Buscar..."
+                (keyup)="selectSearch($event.target.value, field)">
+            <mat-icon matPrefix>search</mat-icon>
+        </mat-form-field>
+        <ng-container *ngFor="let option of field.selectOptions!.dataList">
+            <!--Es mejor ocultar un mat-option que sacarlo de la lista y volverlo a poner, asi no
+se pierde el checked, por eso se utiliza css-->
+            <mat-option [class.hide-option]="!option.show"
+            (click)="marcarDesmarcarOpcion(option,field)"
+            *ngIf="!option[field.selectOptions.propMostrar]"
+            [value]="option[field.selectOptions.propValue]"
+                >
+                {{option[field.selectOptions.propShow]}}
+            </mat-option>
+        </ng-container>
+    </mat-select>
+    <mat-error *ngFor="let validator of field.validators">
+        <mat-error
+            *ngIf="formGroup.controls[field.name].hasError(validator.type) && formGroup.controls[field.name].touched"
+            class="font-11">{{validator.message}}</mat-error>
+    </mat-error>
+</mat-form-field>
+</form>

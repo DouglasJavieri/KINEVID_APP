@@ -22,6 +22,9 @@ $kinevid-theme: mat.define-light-theme((
 
 @include mat.all-component-themes($kinevid-theme);
 
+/* COMPONENT THEMES */
+@import 'app/shared/components/list/list.component.theme';
+
 /* GLOBAL APP STYLES */
 
 html, body {
