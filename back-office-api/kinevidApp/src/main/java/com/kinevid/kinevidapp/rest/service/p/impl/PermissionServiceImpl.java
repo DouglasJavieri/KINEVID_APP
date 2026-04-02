@@ -1,17 +1,23 @@
 package com.kinevid.kinevidapp.rest.service.p.impl;
 
 import com.kinevid.kinevidapp.rest.exception.OperationException;
+import com.kinevid.kinevidapp.rest.model.dto.p.PagedPermissionResponseDto;
+import com.kinevid.kinevidapp.rest.model.dto.p.PermissionRequestDTO;
 import com.kinevid.kinevidapp.rest.model.dto.p.PermissionResponseDto;
 import com.kinevid.kinevidapp.rest.model.entity.p.Permission;
+import com.kinevid.kinevidapp.rest.model.enums.p.PermissionStatus;
 import com.kinevid.kinevidapp.rest.repository.p.PermissionRepository;
+import com.kinevid.kinevidapp.rest.repository.rp.RolePermissionRepository;
 import com.kinevid.kinevidapp.rest.service.p.PermissionService;
 import com.kinevid.kinevidapp.rest.util.FormatUtil;
+import com.kinevid.kinevidapp.rest.util.ValidationUtil;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * @author Douglas Cristhian Javieri Vino
@@ -19,102 +25,190 @@ import org.springframework.data.domain.Pageable;
  */
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class PermissionServiceImpl implements PermissionService {
 
-    @Autowired
-    private PermissionRepository permissionRepository;
+    private final PermissionRepository permissionRepository;
+    private final RolePermissionRepository rolePermissionRepository;
 
     @Override
     @Transactional
-    public PermissionResponseDto createPermission(PermissionResponseDto permissionDto) throws OperationException {
+    public PermissionResponseDto createPermission(PermissionRequestDTO permissionDto) throws OperationException {
         try {
-            if(permissionRepository.existsPermissionByName(permissionDto.getName())){
-                throw new OperationException("Ya existe un permiso con el nombre: " +  permissionDto.getName());
+            ValidationUtil.throwExceptionIfInvalidText("Nombre Permiso", permissionDto.getName(), true, 60);
+            ValidationUtil.throwExceptionIfInvalidText("Descripción", permissionDto.getDescription(), true, 255);
+
+            String normalizedName = permissionDto.getName().toUpperCase().strip();
+
+            if (permissionRepository.existsPermissionByName(normalizedName)) {
+                throw new OperationException("Ya existe un permiso con el nombre: " + normalizedName);
             }
 
             Permission permissionModel = Permission.builder()
-                    .name(permissionDto.getName().toUpperCase().strip())
+                    .name(normalizedName)
                     .description(permissionDto.getDescription().strip())
+                    .status(PermissionStatus.ACTIVE)
                     .build();
             permissionRepository.save(permissionModel);
+
+            log.info("Permiso creado: {}", normalizedName);
             return new PermissionResponseDto(permissionModel);
+
         } catch (OperationException e) {
-            log.error("Error de operación al crear un permiso {}", e.getMessage());
+            log.error("Error al crear permiso: {}", e.getMessage());
             throw e;
         } catch (Exception e) {
-            log.error("Error generico al crear un permiso", e);
-            throw new OperationException("Ocurrió un error inesperado al crear un permiso");
-        }
-    }
-
-    @Override
-    @Transactional
-    public PermissionResponseDto updatePermission(Long idPermission, PermissionResponseDto permissionDto) throws OperationException {
-        try {
-            Permission permissionModel = permissionRepository.findById(idPermission)
-                    .orElseThrow(() -> new OperationException("No existe el permiso con el id: " +  idPermission));
-
-            if(permissionRepository.existsPermissionByName(permissionDto.getName())){
-                throw new OperationException("Ya existe un permiso con el nombre: " +  permissionDto.getName());
-            }
-            permissionModel.setName(permissionDto.getName().toUpperCase().strip());
-            permissionModel.setDescription(permissionDto.getDescription().strip());
-            permissionRepository.save(permissionModel);
-            return new PermissionResponseDto(permissionModel);
-        } catch (OperationException e) {
-            log.error("Error de operación al actualizar un permiso {}", e.getMessage());
-            throw e;
-        } catch (Exception e) {
-            log.error("Error generico al actualizar un permiso", e);
-            throw new OperationException("Ocurrió un error inesperado al actualizar un permiso");
-        }
-    }
-
-    @Override
-    @Transactional
-    public void deletePermission(Long idPermission) throws OperationException {
-        try {
-            Permission permissionModel = permissionRepository.findById(idPermission)
-                    .orElseThrow(() -> new OperationException("No existe el permiso con el id: " +  idPermission));
-            permissionModel.setDeleted(true);
-            permissionRepository.save(permissionModel);
-        } catch (OperationException e) {
-            log.error("Error de operación al eliminar rol {}", e.getMessage());
-            throw e;
-        } catch (Exception e) {
-            log.error("Error inesperado al eliminar rol {}", e.getMessage(), e);
-            throw new OperationException("Ocurrió un error inesperado al eliminar el rol.");
+            log.error("Error inesperado al crear permiso", e);
+            throw new OperationException("Ocurrió un error inesperado al crear el permiso");
         }
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<PermissionResponseDto> findAllPermissions(Pageable pageable) throws OperationException {
+    public PermissionResponseDto getPermissionById(Long id) throws OperationException {
         try {
-            Page<Permission> permissions = permissionRepository.findAll(pageable);
-            return permissions.map(PermissionResponseDto::new);
+            Permission permission = permissionRepository.findById(id)
+                    .orElseThrow(() -> new OperationException(FormatUtil.noRegistrado("Permiso", id)));
 
+            if (permission.isDeleted()) {
+                throw new OperationException(FormatUtil.noRegistrado("Permiso", id));
+            }
+
+            return new PermissionResponseDto(permission);
+
+        } catch (OperationException e) {
+            log.error("Error al buscar permiso con ID {}: {}", id, e.getMessage());
+            throw e;
         } catch (Exception e) {
-            log.error("Error al listar permisos", e);
-            throw new OperationException("Error al listar permisos");
+            log.error("Error inesperado al buscar permiso con ID {}", id, e);
+            throw new OperationException("Ocurrió un error inesperado al buscar el permiso");
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<PagedPermissionResponseDto> findAllPermissions(String status, Pageable pageable) throws OperationException {
+        try {
+            PermissionStatus permissionStatus = null;
+            if (status != null && !status.isBlank()) {
+                try {
+                    permissionStatus = PermissionStatus.valueOf(status.toUpperCase().strip());
+                } catch (IllegalArgumentException ex) {
+                    throw new OperationException(
+                            "Estado de permiso inválido: '" + status + "'. Valores válidos: ACTIVE, INACTIVE");
+                }
+            }
+            return permissionRepository.findAllPermissions(permissionStatus, pageable);
+
+        } catch (OperationException e) {
+            log.error("Error al listar permisos: {}", e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            log.error("Error inesperado al listar permisos", e);
+            throw new OperationException("Ocurrió un error inesperado al listar permisos");
         }
     }
 
     @Override
     @Transactional
-    public void changeStatus(Long idPermission, String status) throws OperationException {
+    public PermissionResponseDto updatePermission(Long id, PermissionRequestDTO permissionDto) throws OperationException {
         try {
-            Permission permission = permissionRepository.findById(idPermission)
-                    .orElseThrow(() -> new OperationException(FormatUtil.noRegistrado("Permiso", idPermission)));
+            ValidationUtil.throwExceptionIfInvalidText("Nombre Permiso", permissionDto.getName(), true, 60);
+            ValidationUtil.throwExceptionIfInvalidText("Descripción", permissionDto.getDescription(), true, 255);
 
-            log.info("Estado de permiso cambiado para: {}", permission.getName());
+            Permission permissionModel = permissionRepository.findById(id)
+                    .orElseThrow(() -> new OperationException(FormatUtil.noRegistrado("Permiso", id)));
+
+            if (permissionModel.isDeleted()) {
+                throw new OperationException(FormatUtil.noRegistrado("Permiso", id));
+            }
+
+            String normalizedName = permissionDto.getName().toUpperCase().strip();
+
+            if (permissionRepository.existsPermissionByNameExcludingId(normalizedName, id)) {
+                throw new OperationException("Ya existe un permiso con el nombre: " + normalizedName);
+            }
+
+            permissionModel.setName(normalizedName);
+            permissionModel.setDescription(permissionDto.getDescription().strip());
+            permissionRepository.save(permissionModel);
+
+            log.info("Permiso actualizado: ID={}, Nombre={}", id, normalizedName);
+            return new PermissionResponseDto(permissionModel);
 
         } catch (OperationException e) {
-            log.error("Error al cambiar estado de permiso: {}", e.getMessage());
+            log.error("Error al actualizar permiso con ID {}: {}", id, e.getMessage());
             throw e;
         } catch (Exception e) {
-            log.error("Error inesperado al cambiar estado de permiso", e);
-            throw new OperationException("Error al cambiar estado de permiso");
+            log.error("Error inesperado al actualizar permiso con ID {}", id, e);
+            throw new OperationException("Ocurrió un error inesperado al actualizar el permiso");
+        }
+    }
+
+    @Override
+    @Transactional  // BUG FIX: era un stub vacío y no guardaba nada
+    public PermissionResponseDto changeStatus(Long id, PermissionStatus status) throws OperationException {
+        try {
+            if (status == PermissionStatus.ELIMINATION) {
+                throw new OperationException(
+                        "No se puede establecer el estado ELIMINATION directamente. Use el endpoint de eliminación.");
+            }
+
+            Permission permission = permissionRepository.findById(id)
+                    .orElseThrow(() -> new OperationException(FormatUtil.noRegistrado("Permiso", id)));
+
+            if (permission.isDeleted()) {
+                throw new OperationException(FormatUtil.noRegistrado("Permiso", id));
+            }
+
+            if (permission.getStatus() == status) {
+                throw new OperationException(
+                        "El permiso ya se encuentra en el estado '" + status.getDescription() + "'.");
+            }
+
+            permission.setStatus(status);
+            permissionRepository.save(permission);
+            log.info("Estado del permiso ID={} cambiado a: {}", id, status);
+            return new PermissionResponseDto(permission);
+
+        } catch (OperationException e) {
+            log.error("Error al cambiar estado del permiso con ID {}: {}", id, e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            log.error("Error inesperado al cambiar estado del permiso con ID {}", id, e);
+            throw new OperationException("Ocurrió un error inesperado al cambiar el estado del permiso");
+        }
+    }
+
+    @Override
+    @Transactional
+    public void deletePermission(Long id) throws OperationException {
+        try {
+            Permission permissionModel = permissionRepository.findById(id)
+                    .orElseThrow(() -> new OperationException(FormatUtil.noRegistrado("Permiso", id)));
+
+            if (permissionModel.isDeleted()) {
+                throw new OperationException(FormatUtil.noRegistrado("Permiso", id));
+            }
+
+            if (rolePermissionRepository.hasActiveRolesByPermissionId(id)) {
+                throw new OperationException(
+                        "No se puede eliminar el permiso '" + permissionModel.getName() +
+                        "' porque está asignado a roles activos. " +
+                        "Desasigne el permiso de todos los roles antes de eliminarlo.");
+            }
+
+            permissionModel.setDeleted(true);
+            permissionModel.setStatus(PermissionStatus.ELIMINATION);
+            permissionRepository.save(permissionModel);
+            log.info("Permiso con ID={} eliminado lógicamente", id);
+
+        } catch (OperationException e) {
+            log.error("Error al eliminar permiso con ID {}: {}", id, e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            log.error("Error inesperado al eliminar permiso con ID {}", id, e);
+            throw new OperationException("Ocurrió un error inesperado al eliminar el permiso");
         }
     }
 

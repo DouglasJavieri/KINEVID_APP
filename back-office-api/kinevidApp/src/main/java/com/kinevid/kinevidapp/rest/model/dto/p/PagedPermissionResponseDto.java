@@ -5,8 +5,8 @@ import lombok.*;
 
 /**
  * @author Douglas Cristhian Javieri Vino
- * @created 03/03/2026
- * DTO de salida para operaciones sobre un solo permiso (create, update, getById).
+ * @created 01/04/2026
+ * DTO de salida para listado paginado de permisos.
  */
 @Getter
 @Setter
@@ -14,16 +14,17 @@ import lombok.*;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class PermissionResponseDto {
+public class PagedPermissionResponseDto {
     private Long id;
     private String name;
     private String description;
     private String status;
 
-    public PermissionResponseDto(Permission permission) {
+    public PagedPermissionResponseDto(Permission permission) {
         this.id = permission.getId();
         this.name = permission.getName();
         this.description = permission.getDescription();
         this.status = permission.getStatus() != null ? permission.getStatus().getValue() : null;
     }
 }
+

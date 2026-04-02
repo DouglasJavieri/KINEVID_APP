@@ -2,7 +2,9 @@ package com.kinevid.kinevidapp.rest.service.role;
 
 import com.kinevid.kinevidapp.rest.exception.OperationException;
 import com.kinevid.kinevidapp.rest.model.dto.role.PagedRoleResponseDto;
+import com.kinevid.kinevidapp.rest.model.dto.role.RoleRequestDTO;
 import com.kinevid.kinevidapp.rest.model.dto.role.RoleResponseDto;
+import com.kinevid.kinevidapp.rest.model.enums.role.RoleStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -12,9 +14,11 @@ import org.springframework.data.domain.Pageable;
  */
 public interface RoleService {
 
-    RoleResponseDto createRole(RoleResponseDto  role) throws OperationException;
-    RoleResponseDto updateRole(Long idRol, RoleResponseDto  role) throws OperationException;
-    void deleteRole(Long idRol) throws OperationException;
+    // --- CRUD completo ---
+    RoleResponseDto createRole(RoleRequestDTO role) throws OperationException;
+    RoleResponseDto getRoleById(Long id) throws OperationException;
     Page<PagedRoleResponseDto> findAllRoles(String status, Pageable pageable) throws OperationException;
-    void changeStatus(Long idRol, String status) throws OperationException;
+    RoleResponseDto updateRole(Long id, RoleRequestDTO role) throws OperationException;
+    RoleResponseDto changeStatus(Long id, RoleStatus status) throws OperationException;
+    void deleteRole(Long id) throws OperationException;
 }

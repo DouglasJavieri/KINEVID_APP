@@ -1,6 +1,7 @@
 package com.kinevid.kinevidapp.rest.model.entity.p;
 
 import com.kinevid.kinevidapp.rest.model.base.AuditableEntity;
+import com.kinevid.kinevidapp.rest.model.enums.p.PermissionStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -32,4 +33,8 @@ public class Permission extends AuditableEntity implements Serializable {
     @Basic
     @Column(name = "description", length = 255)
     private String description;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "permission_status")
+    private PermissionStatus status;
 }

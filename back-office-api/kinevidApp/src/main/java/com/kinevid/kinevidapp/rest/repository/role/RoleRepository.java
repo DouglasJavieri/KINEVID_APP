@@ -25,6 +25,12 @@ public interface RoleRepository extends JpaRepository<Role,Long> {
             "AND r.name = :name")
     boolean existsRoleByName(@Param("name") String name);
 
+    @Query("SELECT CASE WHEN COUNT(r) > 0 THEN true ELSE false END " +
+            "FROM Role r " +
+            "WHERE r.deleted = false AND r.status <> com.kinevid.kinevidapp.rest.model.enums.role.RoleStatus.ELIMINATION " +
+            "AND r.name = :name AND r.id <> :excludeId")
+    boolean existsRoleByNameExcludingId(@Param("name") String name, @Param("excludeId") Long excludeId);
+
     @Query("SELECT new com.kinevid.kinevidapp.rest.model.dto.role.PagedRoleResponseDto(r) " +
             "FROM Role r " +
             "WHERE r.deleted = false AND (:status IS NULL OR r.status = :status) ")

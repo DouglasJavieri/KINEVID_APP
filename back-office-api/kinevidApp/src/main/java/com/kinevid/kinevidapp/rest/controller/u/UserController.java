@@ -157,7 +157,6 @@ public class UserController {
         }
     }
 
-    // ─── CHANGE STATUS ─────────────────────────────────────────────────────────
 
     @PatchMapping("/{id}/status")
     @PreAuthorize("hasAuthority('CHANGE_USER_STATUS')")
@@ -166,14 +165,10 @@ public class UserController {
                     "Para eliminar use el endpoint DELETE. Requiere permiso CHANGE_USER_STATUS.",
             tags = {"users"},
             responses = {
-                    @ApiResponse(responseCode = "200", description = "Estado cambiado exitosamente",
-                            content = @Content(mediaType = "application/json")),
-                    @ApiResponse(responseCode = "400", description = "Estado inválido o usuario no encontrado",
-                            content = @Content),
-                    @ApiResponse(responseCode = "401", description = "No autenticado",
-                            content = @Content(schema = @Schema(hidden = true))),
-                    @ApiResponse(responseCode = "403", description = "Sin permiso CHANGE_USER_STATUS",
-                            content = @Content(schema = @Schema(hidden = true)))
+                    @ApiResponse(responseCode = "200", description = "Estado cambiado exitosamente", content = @Content(mediaType = "application/json")),
+                    @ApiResponse(responseCode = "400", description = "Estado inválido o usuario no encontrado", content = @Content),
+                    @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content(schema = @Schema(hidden = true))),
+                    @ApiResponse(responseCode = "403", description = "Sin permiso CHANGE_USER_STATUS", content = @Content(schema = @Schema(hidden = true)))
             }, security = @SecurityRequirement(name = "bearerToken"))
     public ResponseEntity<ResponseBody<UserResponseDto>> changeUserStatus(
             @PathVariable Long id,

@@ -6,6 +6,7 @@ import com.kinevid.kinevidapp.rest.model.entity.role.Role;
 import com.kinevid.kinevidapp.rest.model.entity.rp.RolePermission;
 import com.kinevid.kinevidapp.rest.model.entity.ur.UserRole;
 import com.kinevid.kinevidapp.rest.model.enums.auth.UserStatus;
+import com.kinevid.kinevidapp.rest.model.enums.p.PermissionStatus;
 import com.kinevid.kinevidapp.rest.model.enums.role.RoleStatus;
 import com.kinevid.kinevidapp.rest.repository.p.PermissionRepository;
 import com.kinevid.kinevidapp.rest.repository.role.RoleRepository;
@@ -94,6 +95,7 @@ public class DataLoader implements CommandLineRunner {
                 Permission permission = Permission.builder()
                         .name(permData[0])
                         .description(permData[1])
+                        .status(PermissionStatus.ACTIVE)
                         .build();
                 permissionRepository.save(permission);
                 log.debug("Permiso creado: {}", permData[0]);

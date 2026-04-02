@@ -25,4 +25,9 @@ public interface UserRoleRepository extends JpaRepository<UserRole, Long> {
     boolean existsByUserIdAndRoleId(@Param("userId") Long userId,
                                     @Param("roleId") Long roleId);
 
+    @Query("SELECT CASE WHEN COUNT(ur) > 0 THEN true ELSE false END " +
+            "FROM UserRole ur " +
+            "WHERE ur.role.id = :roleId AND ur.deleted = false")
+    boolean hasActiveUsersByRoleId(@Param("roleId") Long roleId);
+
 }

@@ -32,5 +32,9 @@ public interface RolePermissionRepository extends JpaRepository<RolePermission,L
     Optional<RolePermission> findByRoleIdAndPermissionId(@Param("roleId") Long roleId,
                                                          @Param("permissionId") Long permissionId);
 
+    @Query("SELECT CASE WHEN COUNT(rp) > 0 THEN true ELSE false END " +
+            "FROM RolePermission rp " +
+            "WHERE rp.permission.id = :permissionId AND rp.deleted = false")
+    boolean hasActiveRolesByPermissionId(@Param("permissionId") Long permissionId);
 
 }

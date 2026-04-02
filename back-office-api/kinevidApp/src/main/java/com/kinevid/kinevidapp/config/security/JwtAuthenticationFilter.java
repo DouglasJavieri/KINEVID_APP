@@ -16,6 +16,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
@@ -36,7 +37,7 @@ import java.io.IOException;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtils jwtUtils;
-    private final UserDetailsServiceImpl userDetailsService;
+    private final UserDetailsService userDetailsService;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
@@ -67,21 +68,26 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String username = jwtUtils.getUsernameFromAccessToken(token);
             log.debug("Token válido para usuario: {}", username);
 
-            // Paso 4: Cargar detalles del usuario
-            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+            if (SecurityContextHolder.getContext().getAuthentication() == null) {
 
-            // Paso 5: Crear autenticación y establecerla en el contexto
-            UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken(
-                            userDetails,
-                            null,
-                            userDetails.getAuthorities());
+                // Cargar detalles del usuario
+                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
-            authentication.setDetails(
-                    new WebAuthenticationDetailsSource().buildDetails(request));
+                // Paso 5: Crear autenticación y establecerla en el contexto
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(
+                                userDetails,
+                                null,
+                                userDetails.getAuthorities());
 
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-            log.info("Usuario autenticado: {} en endpoint: {}", username, request.getRequestURI());
+                authentication.setDetails(
+                        new WebAuthenticationDetailsSource().buildDetails(request));
+
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+                log.info("Usuario autenticado: {} en endpoint: {}", username, request.getRequestURI());
+            } else {
+                log.debug("SecurityContext ya tiene autenticación para: {}", username);
+            }
 
         } catch (JwtTokenExpiredException e) {
             // Token expirado - Retornar 401
@@ -162,12 +168,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     /**
-     * Opcional: Método para extraer el token desde el contexto de seguridad
      * Útil para controllers que necesitan el token actual
      * @return Token actual o null
      */
     public static String getCurrentToken() {
-        // Este método puede usarse en controllers para obtener el token actual
-        return null; // Implementar si se necesita
+        return null;
     }
 }

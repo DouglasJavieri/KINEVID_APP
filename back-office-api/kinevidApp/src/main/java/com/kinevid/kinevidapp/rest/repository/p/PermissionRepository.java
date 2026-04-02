@@ -1,6 +1,8 @@
 package com.kinevid.kinevidapp.rest.repository.p;
 
+import com.kinevid.kinevidapp.rest.model.dto.p.PagedPermissionResponseDto;
 import com.kinevid.kinevidapp.rest.model.entity.p.Permission;
+import com.kinevid.kinevidapp.rest.model.enums.p.PermissionStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -23,14 +25,20 @@ public interface PermissionRepository extends JpaRepository<Permission, Long> {
             "AND p.name = :name")
     boolean existsPermissionByName(@Param("name") String name);
 
+    @Query("SELECT CASE WHEN COUNT(p) > 0 THEN true ELSE false END " +
+            "FROM Permission p " +
+            "WHERE p.deleted = false " +
+            "AND p.name = :name AND p.id <> :excludeId")
+    boolean existsPermissionByNameExcludingId(@Param("name") String name, @Param("excludeId") Long excludeId);
+
     @Query("SELECT p " +
             "FROM Permission p " +
             "WHERE p.deleted = false AND p.name = :name")
     Optional<Permission> findByName(@Param("name") String name);
 
-    @Query("SELECT p " +
+    @Query("SELECT new com.kinevid.kinevidapp.rest.model.dto.p.PagedPermissionResponseDto(p) " +
             "FROM Permission p " +
-            "WHERE p.deleted = false ")
-    Page<Permission> findAll(Pageable pageable);
-
+            "WHERE p.deleted = false AND (:status IS NULL OR p.status = :status)")
+    Page<PagedPermissionResponseDto> findAllPermissions(@Param("status") PermissionStatus status,
+                                                        Pageable pageable);
 }

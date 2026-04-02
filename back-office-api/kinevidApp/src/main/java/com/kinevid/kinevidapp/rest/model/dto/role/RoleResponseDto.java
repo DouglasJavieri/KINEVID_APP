@@ -14,11 +14,13 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class RoleResponseDto {
+    private Long id;
     private String name;
     private String description;
     private String status;
 
     public RoleResponseDto(Role role) {
+        this.id = role.getId();
         this.name = role.getName();
         this.description = role.getDescription();
         this.status = role.getStatus().getValue();

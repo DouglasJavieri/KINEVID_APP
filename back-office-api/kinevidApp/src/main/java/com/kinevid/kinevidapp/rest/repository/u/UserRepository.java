@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -66,5 +67,23 @@ public interface UserRepository extends JpaRepository<User, Long> {
             "WHERE u.deleted = false " +
             "AND u.status <> com.kinevid.kinevidapp.rest.model.enums.auth.UserStatus.ELIMINATION")
     Page<User> findAllActive(Pageable pageable);
+
+    @Query("SELECT ur.role.name " +
+            "FROM UserRole ur " +
+            "WHERE ur.user.id = :userId " +
+            "AND ur.role.status = com.kinevid.kinevidapp.rest.model.enums.role.RoleStatus.ACTIVE " +
+            "AND ur.role.deleted = false " +
+            "AND ur.deleted = false")
+    List<String> findRoleNamesByUserId(@Param("userId") Long userId);
+
+    @Query("SELECT DISTINCT rp.permission.name " +
+            "FROM UserRole ur, RolePermission rp " +
+            "WHERE ur.user.id = :userId " +
+            "AND rp.role.id = ur.role.id " +
+            "AND ur.role.status = com.kinevid.kinevidapp.rest.model.enums.role.RoleStatus.ACTIVE " +
+            "AND ur.role.deleted = false " +
+            "AND ur.deleted = false " +
+            "AND rp.deleted = false")
+    List<String> findPermissionNamesByUserId(@Param("userId") Long userId);
 
 }
