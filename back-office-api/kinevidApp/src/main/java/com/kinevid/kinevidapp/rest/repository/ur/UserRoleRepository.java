@@ -16,7 +16,7 @@ public interface UserRoleRepository extends JpaRepository<UserRole, Long> {
 
     @Query("SELECT ur.role " +
             "FROM UserRole ur " +
-            "WHERE ur.user.id = :idUser ")
+            "WHERE ur.user.id = :idUser AND ur.deleted = false")
     List<Role> findRolesByUserId(@Param("idUser") Long idUser);
 
     @Query("SELECT CASE WHEN COUNT(ur) > 0 THEN true ELSE false END " +
@@ -30,4 +30,8 @@ public interface UserRoleRepository extends JpaRepository<UserRole, Long> {
             "WHERE ur.role.id = :roleId AND ur.deleted = false")
     boolean hasActiveUsersByRoleId(@Param("roleId") Long roleId);
 
+    @Query("SELECT ur FROM UserRole ur " +
+            "WHERE ur.user.id = :userId AND ur.role.id = :roleId AND ur.deleted = false")
+    java.util.Optional<UserRole> findByUserIdAndRoleId(@Param("userId") Long userId,
+                                                        @Param("roleId") Long roleId);
 }

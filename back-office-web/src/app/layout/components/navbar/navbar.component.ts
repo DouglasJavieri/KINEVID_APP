@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Output, Input, ElementRef, HostListener } from '@angular/core';
-import { User } from "../../../shared/models/u/user.interface";
+import { UserAuthInfo } from '../../../core/models/auth.model';
 
 @Component({
   selector: 'knv-navbar',
@@ -7,7 +7,7 @@ import { User } from "../../../shared/models/u/user.interface";
   styleUrls: ['./navbar.component.scss']
 })
 export class NavbarComponent {
-  @Input() user: User | null = null;
+  @Input() user: UserAuthInfo | null = null;
   @Input() sidebarCollapsed = false;
 
   @Output() toggleSidebar = new EventEmitter<void>();
@@ -21,17 +21,12 @@ export class NavbarComponent {
     return this.user !== null;
   }
 
-  // Seguridad: devuelve string siempre para evitar null en la UI
   get displayNombre(): string {
-    return this.user?.nombre ?? '';
+    return this.user?.username ?? '';
   }
 
   get displayEmail(): string {
     return this.user?.email ?? '';
-  }
-
-  get currentUser(): User | null {
-    return this.user;
   }
 
   onToggleSidebar(): void {
@@ -55,10 +50,11 @@ export class NavbarComponent {
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {
     if (!this.showUserMenu) return;
-
     const clickedInside = this.host.nativeElement.contains(event.target as Node);
     if (!clickedInside) {
       this.showUserMenu = false;
     }
   }
 }
+
+

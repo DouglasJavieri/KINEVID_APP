@@ -1,8 +1,9 @@
 package com.kinevid.kinevidapp.rest.service.ur;
 
 import com.kinevid.kinevidapp.rest.exception.OperationException;
-import com.kinevid.kinevidapp.rest.model.entity.role.Role;
-import org.springframework.data.repository.query.Param;
+import com.kinevid.kinevidapp.rest.model.dto.role.RoleResponseDto;
+import com.kinevid.kinevidapp.rest.model.dto.ur.UserRoleRequestDto;
+import com.kinevid.kinevidapp.rest.model.dto.ur.UserRoleResponseDto;
 
 import java.util.List;
 import java.util.Optional;
@@ -13,7 +14,15 @@ import java.util.Optional;
  */
 public interface UserRoleService {
 
-    List<Role> findRolesByUserId(Long idUser) throws OperationException;
+    List<RoleResponseDto> getRolesByUserId(Long userId) throws OperationException;
+    UserRoleResponseDto assignRoleToUser(UserRoleRequestDto request) throws OperationException;
+    void removeRoleFromUser(Long userId, Long roleId) throws OperationException;
+
+    /**
+     * Devuelve el nombre del rol principal del usuario.
+     * Se usa en el login y refresh para poblar el campo `role` del JwtResponseDto.
+     * Retorna el primer rol activo asignado al usuario, o empty si no tiene ninguno.
+     */
     Optional<String> getPrimaryRoleNameByUserId(Long userId) throws OperationException;
 
 }

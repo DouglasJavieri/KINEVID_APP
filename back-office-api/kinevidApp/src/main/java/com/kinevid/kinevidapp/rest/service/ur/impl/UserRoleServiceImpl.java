@@ -1,16 +1,25 @@
 package com.kinevid.kinevidapp.rest.service.ur.impl;
 
 import com.kinevid.kinevidapp.rest.exception.OperationException;
+import com.kinevid.kinevidapp.rest.model.dto.role.RoleResponseDto;
+import com.kinevid.kinevidapp.rest.model.dto.u.UserResponseDto;
+import com.kinevid.kinevidapp.rest.model.dto.ur.UserRoleRequestDto;
+import com.kinevid.kinevidapp.rest.model.dto.ur.UserRoleResponseDto;
+import com.kinevid.kinevidapp.rest.model.entity.auth.User;
 import com.kinevid.kinevidapp.rest.model.entity.role.Role;
+import com.kinevid.kinevidapp.rest.model.entity.ur.UserRole;
 import com.kinevid.kinevidapp.rest.repository.ur.UserRoleRepository;
+import com.kinevid.kinevidapp.rest.service.role.RoleService;
+import com.kinevid.kinevidapp.rest.service.u.UserService;
 import com.kinevid.kinevidapp.rest.service.ur.UserRoleService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * @author Douglas Cristhian Javieri Vino
@@ -18,35 +27,113 @@ import java.util.Optional;
  */
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class UserRoleServiceImpl implements UserRoleService {
-
-    @Autowired
-    private UserRoleRepository userRoleRepository;
+    
+    private final UserRoleRepository userRoleRepository;
+    private final UserService userService;
+    private final RoleService roleService;
 
     @Override
     @Transactional(readOnly = true)
-    public List<Role> findRolesByUserId(Long idUser) throws OperationException {
+    public List<RoleResponseDto> getRolesByUserId(Long userId) throws OperationException {
         try {
-            return userRoleRepository.findRolesByUserId(idUser);
+            userService.getUserById(userId);
+            List<Role> roles = userRoleRepository.findRolesByUserId(userId);
+            return roles.stream()
+                    .map(RoleResponseDto::new)
+                    .collect(Collectors.toList());
+
+        } catch (OperationException e) {
+            log.error("Error al buscar roles del usuario ID {}: {}", userId, e.getMessage());
+            throw e;
         } catch (Exception e) {
-            log.info("Error al buscar roles para el usuario con ID: {} ", idUser, e);
-            throw new OperationException("Error al buscar roles para el usuario", e.getCause());
+            log.error("Error inesperado al buscar roles del usuario ID {}", userId, e);
+            throw new OperationException("Error al buscar roles del usuario");
+        }
+    }
+
+    @Override
+    @Transactional
+    public UserRoleResponseDto assignRoleToUser(UserRoleRequestDto request) throws OperationException {
+        try {
+            UserResponseDto userDto = userService.getUserById(request.getUserId());
+            RoleResponseDto roleDto = roleService.getRoleById(request.getRoleId());
+
+            if (userRoleRepository.existsByUserIdAndRoleId(request.getUserId(), request.getRoleId())) {
+                throw new OperationException(
+                        "El rol '" + roleDto.getName() + "' ya está asignado al usuario '" + userDto.getUsername() + "'.");
+            }
+            User userRef = new User();
+            userRef.setId(request.getUserId());
+
+            Role roleRef = new Role();
+            roleRef.setId(request.getRoleId());
+
+            UserRole userRole = UserRole.builder()
+                    .user(userRef)
+                    .role(roleRef)
+                    .build();
+
+            UserRole saved = userRoleRepository.save(userRole);
+            log.info("Rol '{}' asignado al usuario '{}'", roleDto.getName(), userDto.getUsername());
+            return UserRoleResponseDto.builder()
+                    .id(saved.getId())
+                    .userId(userDto.getId())
+                    .username(userDto.getUsername())
+                    .roleId(roleDto.getId())
+                    .roleName(roleDto.getName())
+                    .build();
+
+        } catch (OperationException e) {
+            log.error("Error al asignar rol a usuario: {}", e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            log.error("Error inesperado al asignar rol a usuario", e);
+            throw new OperationException("Error al asignar rol a usuario");
+        }
+    }
+
+
+    @Override
+    @Transactional
+    public void removeRoleFromUser(Long userId, Long roleId) throws OperationException {
+        try {
+            userService.getUserById(userId);
+            RoleResponseDto roleDto = roleService.getRoleById(roleId);
+
+            UserRole userRole = userRoleRepository.findByUserIdAndRoleId(userId, roleId)
+                    .orElseThrow(() -> new OperationException(
+                            "El rol '" + roleDto.getName() + "' no está asignado a este usuario."));
+
+            userRole.setDeleted(true);
+            userRoleRepository.save(userRole);
+            log.info("Rol '{}' removido del usuario ID='{}'", roleDto.getName(), userId);
+
+        } catch (OperationException e) {
+            log.error("Error al remover rol de usuario: {}", e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            log.error("Error inesperado al remover rol de usuario", e);
+            throw new OperationException("Error al remover rol de usuario");
         }
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<String> getPrimaryRoleNameByUserId(Long userId) {
+    public Optional<String> getPrimaryRoleNameByUserId(Long userId) throws OperationException {
         try {
             List<Role> roles = userRoleRepository.findRolesByUserId(userId);
-            if (roles != null && !roles.isEmpty()) {
-                return Optional.of(roles.get(0).getName());
+            if (roles.isEmpty()) {
+                log.warn("El usuario ID={} no tiene roles asignados", userId);
+                return Optional.empty();
             }
-            return Optional.empty();
+            // Retorna el nombre del primer rol activo encontrado
+            return Optional.of(roles.get(0).getName());
+
         } catch (Exception e) {
-            log.error("Error al obtener rol principal para usuario ID: {}", userId, e);
-            return Optional.empty();
+            log.error("Error al obtener rol principal del usuario ID={}", userId, e);
+            throw new OperationException("Error al obtener rol del usuario");
         }
     }
-
 }

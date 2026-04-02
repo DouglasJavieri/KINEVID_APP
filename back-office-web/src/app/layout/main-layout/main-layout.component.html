@@ -1,5 +1,5 @@
 <knv-navbar
-  [user]="user"
+  [user]="currentUser$ | async"
   [sidebarCollapsed]="sidebarCollapsed"
   (toggleSidebar)="onToggleSidebar()"
   (logout)="onLogout()">
