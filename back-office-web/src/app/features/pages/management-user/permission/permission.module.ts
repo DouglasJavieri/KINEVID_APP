@@ -10,6 +10,9 @@ import { MatMenuModule }      from '@angular/material/menu';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule }    from '@angular/material/select';
 import { MatDialogModule }    from '@angular/material/dialog';
+import { MatInputModule }     from '@angular/material/input';
+import { MatDividerModule }   from '@angular/material/divider';
+import { MatTooltipModule }   from '@angular/material/tooltip';
 
 // Shared & Layout
 import { SharedModule }        from '../../../../shared/shared.module';
@@ -19,9 +22,13 @@ import { BreadcrumbsModule }   from '../../../../shared/components/breadcrumbs/b
 // Feature
 import { PermissionComponent }       from './permission.component';
 import { PermissionRoutingModule }   from './permission-routing.module';
+import { AddPermissionComponent }    from './add-permission/add-permission.component';
 
 @NgModule({
-  declarations: [PermissionComponent],
+  declarations: [
+    PermissionComponent,
+    AddPermissionComponent,
+  ],
   imports: [
     CommonModule,
     ReactiveFormsModule,
@@ -32,6 +39,9 @@ import { PermissionRoutingModule }   from './permission-routing.module';
     MatFormFieldModule,
     MatSelectModule,
     MatDialogModule,
+    MatInputModule,
+    MatDividerModule,
+    MatTooltipModule,
     SharedModule,
     PageLayoutModule,
     BreadcrumbsModule,
@@ -39,4 +49,6 @@ import { PermissionRoutingModule }   from './permission-routing.module';
   ],
 })
 export class PermissionModule {}
+
+
 

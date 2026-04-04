@@ -12,38 +12,44 @@ const routes: Routes = [
     component: MainLayoutComponent,
     children: [
 
-      // Ruta pública para todos los usuarios autenticados
+      // ── Home (all authenticated users) ───────────────────────────────
       { path: 'home', component: HomeComponent },
+
+      // ── Management Users (ADMIN only) ────────────────────────────────
+      // Sub-routes handled in ManagementUserRoutingModule:
+      //   /management-users/permissions
+      //   /management-users/roles     (future)
+      //   /management-users/users     (future)
       {
-        path: 'permisos',
+        path: 'management-users',
         canActivate: [RoleGuard],
         data: { roles: [AppRole.ADMIN] },
         loadChildren: () =>
-          import('./management-user/permission/permission.module').then(m => m.PermissionModule),
+          import('./management-user/management-user.module').then(m => m.ManagementUserModule),
       },
 
-      // Roles del sistema (solo ADMIN) — pendiente de implementación
+      // ── Appointments module (future) ──────────────────────────────────
       // {
-      //   path: 'roles',
+      //   path: 'appointments',
       //   canActivate: [RoleGuard],
       //   data: { roles: [AppRole.ADMIN] },
-      //   loadChildren: () => import('./management-usr/role/role.module').then(m => m.RoleModule),
+      //   loadChildren: () => import('./appointments/appointments.module').then(m => m.AppointmentsModule),
       // },
 
-      // Usuarios del sistema (solo ADMIN) — pendiente de implementación
+      // ── Clinical Records module (future) ──────────────────────────────
       // {
-      //   path: 'usuarios',
+      //   path: 'clinical-records',
       //   canActivate: [RoleGuard],
       //   data: { roles: [AppRole.ADMIN] },
-      //   loadChildren: () => import('./management-usr/user/user.module').then(m => m.UserModule),
+      //   loadChildren: () => import('./clinical-records/clinical-records.module').then(m => m.ClinicalRecordsModule),
       // },
 
-      // ── Módulo de Citas (ADMIN + futuros roles) ───────────────────────
+      // ── Image Analysis module (future) ────────────────────────────────
       // {
-      //   path: 'citas',
+      //   path: 'image-analysis',
       //   canActivate: [RoleGuard],
       //   data: { roles: [AppRole.ADMIN] },
-      //   loadChildren: () => import('./citas/citas.module').then(m => m.CitasModule)
+      //   loadChildren: () => import('./image-analysis/image-analysis.module').then(m => m.ImageAnalysisModule),
       // },
 
       { path: '', redirectTo: 'home', pathMatch: 'full' },

@@ -1,21 +1,23 @@
 import { MatDialogConfig } from '@angular/material/dialog';
 import { MatBottomSheetConfig } from '@angular/material/bottom-sheet';
 
-/** Ancho estándar del panel lateral derecho (formularios, detalles). */
+export const NAVBAR_HEIGHT = '60px';
+
 export const leftDialogWidth = '400px';
 
 /**
  * Configuración estándar para diálogos en panel lateral derecho.
  * Usar para formularios de creación y edición.
+ * El panel comienza justo debajo del navbar fijo (60px).
  *
  * this.dialog.open(MyFormComponent, buildRightDialogConfig({ id: 1 }));
  */
 export const buildRightDialogConfig = <T>(data: T): MatDialogConfig<T> => ({
   width: leftDialogWidth,
-  height: '100%',
+  height: `calc(100vh - ${NAVBAR_HEIGHT})`,
   autoFocus: false,
   disableClose: true,
-  position: { right: '0' },
+  position: { right: '0', top: NAVBAR_HEIGHT },
   data,
 });
 

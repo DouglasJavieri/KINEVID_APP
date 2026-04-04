@@ -12,20 +12,7 @@ export const permissionStatusOptions = [
   { value: 'INACTIVE', label: 'Inactivo' },
 ];
 
-export const permissionStatus = {
-  ACTIVE:   { backendValue: 'ACTIVO',   requestName: 'ACTIVE',   label: 'Activo'   },
-  INACTIVE: { backendValue: 'INACTIVO', requestName: 'INACTIVE', label: 'Inactivo' },
-};
-
 export const permissionTableColumns: ITableColumn[] = [
-  {
-    name: 'ID',
-    property: 'id',
-    visible: true,
-    isModelProperty: true,
-    isSort: false,
-    width: '70px',
-  },
   {
     name: 'Nombre',
     property: 'name',

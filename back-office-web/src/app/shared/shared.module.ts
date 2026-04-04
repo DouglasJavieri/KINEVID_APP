@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { HasRoleDirective } from './directives/has-role.directive';
 import { ServerPagingTableModule } from './components/table/server-page-table/server-paging-table.module';
 import { ListModule } from './components/list/list.module';
+import { SelectsModule } from './components/selects/selects.module';
+import { KnvCardModule } from './components/card/card.module';
 
 /**
  * Módulo compartido de la aplicación.
@@ -24,12 +26,16 @@ import { ListModule } from './components/list/list.module';
     CommonModule,
     ServerPagingTableModule,
     ListModule,
+    SelectsModule,
+    KnvCardModule,
   ],
   exports: [
     CommonModule,
     HasRoleDirective,
     ServerPagingTableModule,
     ListModule,
+    SelectsModule,
+    KnvCardModule,
   ]
 })
 export class SharedModule {}

@@ -20,7 +20,9 @@ import {
   permissionStatusOptions,
   permissionTableColumns,
 } from './permission.util';
-import {PermissionPageResponse} from "../../../../core/models/permission/permission.interface";
+import { PermissionPageResponse } from '../../../../core/models/permission/permission.interface';
+import { AddPermissionComponent } from './add-permission/add-permission.component';
+import { buildRightDialogConfig } from '../../../../shared/utils/dialog.util';
 
 @Component({
   selector: 'knv-permission',
@@ -75,7 +77,7 @@ export class PermissionComponent implements OnInit {
     const actions: ITableRowAction[] = [];
     if (this.actions['updateAction']) {
       actions.push({
-        action: 'Editar',
+        action: 'Actualizar',
         actionCode: permissionActionsCode.updateAction,
         icon: 'edit',
       });
@@ -102,7 +104,6 @@ export class PermissionComponent implements OnInit {
     return this.permissionService.getAll({ ...queryParams, ...extra });
   };
 
-  // El backend devuelve el VALUE del enum: 'ACTIVO' / 'INACTIVO'
   itemPermissionFormatterFn = (content: PermissionPageResponse[]): PermissionPageResponse[] =>
     content.map(item => ({
       ...item,
@@ -123,8 +124,10 @@ export class PermissionComponent implements OnInit {
   };
 
   createPermission(): void {
-    // const ref = this.matDialog.open(AddPermissionComponent, buildRightDialogConfig(null));
-    // ref.afterClosed().subscribe(ok => { if (ok) this.tableEvents.next({ event: 'RELOAD_PAGE' }); });
+    const ref = this.matDialog.open(AddPermissionComponent, buildRightDialogConfig(null));
+    ref.afterClosed().subscribe(ok => {
+      if (ok) this.tableEvents.next({ event: 'RELOAD_PAGE' });
+    });
   }
 
   updatePermission(item: PermissionPageResponse): void {
@@ -133,9 +136,9 @@ export class PermissionComponent implements OnInit {
   }
 
   changePermissionStatus(item: PermissionPageResponse): void {
-    const newStatus     = item.status === 'ACTIVO' ? 'INACTIVE' : 'ACTIVE';
-    const actionLabel   = newStatus === 'ACTIVE' ? 'activar' : 'desactivar';
-    const successLabel  = newStatus === 'ACTIVE' ? 'activado'  : 'desactivado';
+    const newStatus = item.status === 'ACTIVO' ? 'INACTIVE' : 'ACTIVE';
+    const actionLabel = newStatus === 'ACTIVE' ? 'activar' : 'desactivar';
+    const successLabel = newStatus === 'ACTIVE' ? 'activado'  : 'desactivado';
 
     Notiflix.Confirm.show(
       'Cambiar estado',

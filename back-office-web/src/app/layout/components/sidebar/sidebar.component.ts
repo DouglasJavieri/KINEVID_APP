@@ -21,28 +21,28 @@ export class SidebarComponent {
       active: true
     },
     {
-      id: 'admin',
-      label: 'Administración',
+      id: 'management-users',
+      label: 'Gestión de Usuarios',
       icon: 'admin_panel_settings',
       route: null,
       children: [
         {
-          id: 'usuarios',
+          id: 'users',
           label: 'Usuarios',
           icon: 'person',
-          route: '/usuarios'
+          route: '/management-users/users'
         },
         {
           id: 'roles',
           label: 'Roles',
           icon: 'security',
-          route: '/roles'
+          route: '/management-users/roles'
         },
         {
-          id: 'permisos',
+          id: 'permissions',
           label: 'Permisos',
           icon: 'lock',
-          route: '/permisos'
+          route: '/management-users/permissions'
         }
       ]
     },

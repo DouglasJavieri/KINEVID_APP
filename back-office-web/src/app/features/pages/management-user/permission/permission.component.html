@@ -1,18 +1,12 @@
 <knv-page-layout mode="card">
-
-  <!-- ── Encabezado: breadcrumbs ─────────────────────────────────────────── -->
   <knv-page-layout-header>
     <knv-breadcrumbs
-      [crumbs]="[{ name: 'Gestión de Usuarios' }]"
+      [crumbs]="[{ name: 'Gestión de Usuarios', link: '/management-users' }]"
       current="Permisos">
     </knv-breadcrumbs>
   </knv-page-layout-header>
-
-  <!-- ── Contenido principal ─────────────────────────────────────────────── -->
   <knv-page-layout-content>
     <knv-list name="Permisos" [withFilter]="false">
-
-      <!-- Botón de agregar (visible solo si tiene permiso) -->
       <div class="actions">
         <button
           *ngIf="actions['createAction']"
@@ -22,11 +16,8 @@
           Agregar Permiso
         </button>
       </div>
-
-      <!-- Tabla paginada con filtros -->
       <div fxLayout="row wrap">
         <div fxFlex="100" class="table-scroll" *ngIf="actions['listAction']">
-
           <knv-server-paging-table
             [dataSource]="dataSource"
             [columns]="columns"
@@ -36,12 +27,8 @@
             [eventManager]="tableEvents"
             [pageSizeOptions]="pageSizeOptions"
             [hasFilters]="true">
-
-            <!-- Panel de filtros (expansible) -->
             <form [formGroup]="form" (ngSubmit)="applyFilter()">
               <div fxLayout="row wrap">
-
-                <!-- Filtro por estado -->
                 <div fxFlex="25" fxFlex.lt-md="100" class="p5">
                   <mat-form-field appearance="outline" style="width: 100%">
                     <mat-label>Estado</mat-label>
@@ -55,10 +42,7 @@
                     </mat-select>
                   </mat-form-field>
                 </div>
-
               </div>
-
-              <!-- Botones del filtro -->
               <div fxLayout="row" fxLayoutAlign="start center" style="gap: 10px; padding: 5px">
                 <button mat-flat-button color="accent" type="submit">
                   Buscar
@@ -68,13 +52,10 @@
                 </button>
               </div>
             </form>
-
           </knv-server-paging-table>
         </div>
       </div>
-
     </knv-list>
   </knv-page-layout-content>
-
 </knv-page-layout>
 
