@@ -3,7 +3,7 @@ import { Component, Input } from '@angular/core';
 @Component({
   selector: 'knv-page-layout',
   template: `
-    <div [knvPageLayout]="mode" [class]="customClass">
+    <div knvPageLayout [mode]="mode" [class]="customClass">
       <ng-content></ng-content>
     </div>
   `,

@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { HasRoleDirective } from './directives/has-role.directive';
 import { ServerPagingTableModule } from './components/table/server-page-table/server-paging-table.module';
 import { ListModule } from './components/list/list.module';
-import { SelectMultipleSearchModule } from './components/select-multiple-search/select-multiple-search.module';
 
 /**
  * Módulo compartido de la aplicación.
@@ -25,14 +24,12 @@ import { SelectMultipleSearchModule } from './components/select-multiple-search/
     CommonModule,
     ServerPagingTableModule,
     ListModule,
-    SelectMultipleSearchModule,
   ],
   exports: [
     CommonModule,
     HasRoleDirective,
     ServerPagingTableModule,
     ListModule,
-    SelectMultipleSearchModule,
   ]
 })
 export class SharedModule {}

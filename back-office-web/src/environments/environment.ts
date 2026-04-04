@@ -4,6 +4,19 @@
 
 export const environment = {
   production: false,
-  apiUrl: 'http://localhost:8080/api'
+  apiUrl: 'http://localhost:8080/api',
+  /**
+   * Rutas de los recursos del backend.
+   * Uso: environment.apiUrl + environment.endpoints.permission + '/list'
+   *   → http://localhost:8080/api/permission/list
+   */
+  endpoints: {
+    auth: '/auth',
+    user: '/user',
+    role: '/role',
+    permission: '/permission',
+    userRole: '/user-role',
+    rolePermission: '/role-permission',
+  }
 };
 

@@ -30,19 +30,19 @@ export class SidebarComponent {
           id: 'usuarios',
           label: 'Usuarios',
           icon: 'person',
-          route: '/admin/usuarios'
+          route: '/usuarios'
         },
         {
           id: 'roles',
           label: 'Roles',
           icon: 'security',
-          route: '/admin/roles'
+          route: '/roles'
         },
         {
           id: 'permisos',
           label: 'Permisos',
           icon: 'lock',
-          route: '/admin/permisos'
+          route: '/permisos'
         }
       ]
     },

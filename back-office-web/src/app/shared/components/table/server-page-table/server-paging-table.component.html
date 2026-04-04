@@ -90,8 +90,8 @@
       </ng-container>
 
       <ng-container *ngIf="rowActions" [matColumnDef]="'actions'" sticky>
-        <th *matHeaderCellDef [style]="{ width: '5px' }" mat-header-cell></th>
-        <td *matCellDef="let row" [style]="{ width: '5px' }" mat-cell>
+        <th *matHeaderCellDef [style]="{ width: actionsColumnWidth }" mat-header-cell></th>
+        <td *matCellDef="let row" [style]="{ width: actionsColumnWidth }" mat-cell>
           <button
             type="button"
             color="accent"
@@ -100,7 +100,7 @@
             [matMenuTriggerFor]="actionsMenu"
             (click)="$event.stopPropagation()"
           >
-            <mat-icon color="primary">more_vert</mat-icon>
+            <mat-icon color="primary">{{ actionsTriggerIcon }}</mat-icon>
           </button>
           <mat-menu #actionsMenu="matMenu" yPosition="below" xPosition="before">
             <button

@@ -47,6 +47,8 @@ export class ServerPagingTableComponent
   @Input() eventManager!: BehaviorSubject<ITableEvents>;
   @Input() isFilterOpened = false;
   @Input() hasFilters = false;
+  @Input() actionsColumnWidth = '15px';
+  @Input() actionsTriggerIcon = 'list';
 
 
   @ViewChild(MatSort, { static: true }) sort!: MatSort;
