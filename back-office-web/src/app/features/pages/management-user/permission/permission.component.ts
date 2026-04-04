@@ -20,9 +20,10 @@ import {
   permissionStatusOptions,
   permissionTableColumns,
 } from './permission.util';
-import { PermissionPageResponse } from '../../../../core/models/permission/permission.interface';
-import { AddPermissionComponent } from './add-permission/add-permission.component';
-import { buildRightDialogConfig } from '../../../../shared/utils/dialog.util';
+import { PermissionPageResponse }        from '../../../../core/models/permission/permission.interface';
+import { AddPermissionComponent }        from './add-permission/add-permission.component';
+import { UpdatePermissionComponent }     from './update-permission/update-permission.component';
+import { buildRightDialogConfig }        from '../../../../shared/utils/dialog.util';
 
 @Component({
   selector: 'knv-permission',
@@ -131,8 +132,10 @@ export class PermissionComponent implements OnInit {
   }
 
   updatePermission(item: PermissionPageResponse): void {
-    // const ref = this.matDialog.open(UpdatePermissionComponent, buildRightDialogConfig({ permission: item }));
-    // ref.afterClosed().subscribe(ok => { if (ok) this.tableEvents.next({ event: 'RELOAD_PAGE' }); });
+    const ref = this.matDialog.open(UpdatePermissionComponent, buildRightDialogConfig({ permission: item }),);
+    ref.afterClosed().subscribe(ok => {
+      if (ok) this.tableEvents.next({ event: 'RELOAD_PAGE' });
+    });
   }
 
   changePermissionStatus(item: PermissionPageResponse): void {

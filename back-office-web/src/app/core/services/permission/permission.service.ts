@@ -26,30 +26,18 @@ export class PermissionService {
       .pipe(map(resp => mapResponseApi(url, resp)));
   }
 
-  /**
-   * GET /api/permission/:id
-   * Retorna un permiso por su ID.
-   */
   getById(id: number): Observable<PermissionResponse> {
     const url = environment.apiUrl + environment.endpoints.permission + `/${id}`;
     return this.http.get<ApiResponse<PermissionResponse>>(url)
       .pipe(map(resp => mapResponseApi(url, resp)));
   }
 
-  /**
-   * POST /api/permission/create
-   * Crea un nuevo permiso. El backend normaliza el nombre a MAYÚSCULAS.
-   */
   create(body: PermissionRequest): Observable<PermissionResponse> {
     const url = environment.apiUrl + environment.endpoints.permission + `/create`;
     return this.http.post<ApiResponse<PermissionResponse>>(url, body)
       .pipe(map(resp => mapResponseApi(url, resp)));
   }
 
-  /**
-   * PUT /api/permission/update/:id
-   * Actualiza nombre y descripción de un permiso existente.
-   */
   update(id: number, body: PermissionRequest): Observable<PermissionResponse> {
     const url = environment.apiUrl + environment.endpoints.permission + `/update/${id}`;
     return this.http.put<ApiResponse<PermissionResponse>>(url, body)
@@ -62,10 +50,6 @@ export class PermissionService {
       .pipe(map(resp => mapResponseApi(url, resp)));
   }
 
-  /**
-   * DELETE /api/permission/delete/:id
-   * Eliminación lógica del permiso.
-   */
   delete(id: number): Observable<boolean> {
     const url = environment.apiUrl + environment.endpoints.permission + `/delete/${id}`;
     return this.http.delete<ApiResponse<boolean>>(url)

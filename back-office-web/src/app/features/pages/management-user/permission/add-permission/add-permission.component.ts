@@ -38,9 +38,8 @@ export class AddPermissionComponent implements OnInit {
       return;
     }
 
-    // Trimear antes de enviar al backend
     const body: PermissionRequest = {
-      name:        this.form.value.name.trim(),
+      name: this.form.value.name.trim(),
       description: this.form.value.description.trim(),
     };
     Notiflix.Loading.pulse('Guardando...');
@@ -49,7 +48,7 @@ export class AddPermissionComponent implements OnInit {
       next: () => {
         Notiflix.Loading.remove(300);
         Notiflix.Report.success(
-          'Permiso creado',
+          'Operación Exitosa',
           'El permiso fue creado exitosamente.',
           'OK',
         );

@@ -23,11 +23,13 @@ import { BreadcrumbsModule }   from '../../../../shared/components/breadcrumbs/b
 import { PermissionComponent }       from './permission.component';
 import { PermissionRoutingModule }   from './permission-routing.module';
 import { AddPermissionComponent }    from './add-permission/add-permission.component';
+import { UpdatePermissionComponent } from './update-permission/update-permission.component';
 
 @NgModule({
   declarations: [
     PermissionComponent,
     AddPermissionComponent,
+    UpdatePermissionComponent,
   ],
   imports: [
     CommonModule,
