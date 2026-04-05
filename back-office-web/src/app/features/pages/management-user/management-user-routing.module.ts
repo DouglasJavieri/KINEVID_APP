@@ -13,12 +13,11 @@ const routes: Routes = [
       import('./permission/permission.module').then(m => m.PermissionModule),
   },
 
-  // ── Roles (pending implementation) ───────────────────────────────────────
-  // {
-  //   path: 'roles',
-  //   loadChildren: () =>
-  //     import('./role/role.module').then(m => m.RoleModule),
-  // },
+  {
+    path: 'roles',
+    loadChildren: () =>
+      import('./role/role.module').then(m => m.RoleModule),
+  },
 
   // ── Users (pending implementation) ───────────────────────────────────────
   // {

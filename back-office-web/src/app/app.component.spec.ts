@@ -23,7 +23,7 @@ describe('AppComponent', () => {
   it(`should have as title 'back-office-web'`, () => {
     const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.componentInstance;
-    expect(app.title).toEqual('back-office-web');
+    expect(app.title).toEqual('Centro de Fisioterapia Kinevid');
   });
 
   it('should render title', () => {

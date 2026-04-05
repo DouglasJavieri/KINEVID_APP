@@ -5,9 +5,9 @@ import { MatTableDataSource } from '@angular/material/table';
 import { BehaviorSubject } from 'rxjs';
 import * as Notiflix from 'notiflix';
 
-import { AuthService }        from '../../../../core/services/auth.service';
-import { PermissionService }  from '../../../../core/services/permission/permission.service';
-import { AppRole }            from '../../../../core/models/auth.model';
+import { AuthService }    from '../../../../core/services/auth.service';
+import { RoleService }    from '../../../../core/services/roles/role.service';
+import { AppRole }        from '../../../../core/models/auth.model';
 import {
   ITableColumn,
   ITableEvents,
@@ -16,34 +16,34 @@ import {
   noopTableEvent,
 } from '../../../../shared/components/table/table.model';
 import {
-  permissionActionsCode,
-  permissionStatusOptions,
-  permissionTableColumns,
-} from './permission.util';
-import { PermissionPageResponse }        from '../../../../core/models/permission/permission.interface';
-import { AddPermissionComponent }        from './add-permission/add-permission.component';
-import { UpdatePermissionComponent }     from './update-permission/update-permission.component';
-import { buildRightDialogConfig }        from '../../../../shared/utils/dialog.util';
+  roleActionsCode,
+  roleStatusOptions,
+  roleTableColumns,
+} from './role.util';
+import { RolePageResponse }          from '../../../../core/models/roles/role.interface';
+import { AddRoleComponent }          from './add-role/add-role.component';
+import { UpdateRoleComponent }       from './update-role/update-role.component';
+import { buildRightDialogConfig }    from '../../../../shared/utils/dialog.util';
 
 @Component({
-  selector: 'knv-permission',
-  templateUrl: './permission.component.html',
-  styleUrls: ['./permission.component.scss'],
+  selector: 'knv-role',
+  templateUrl: './role.component.html',
+  styleUrls: ['./role.component.scss'],
 })
-export class PermissionComponent implements OnInit {
+export class RoleComponent implements OnInit {
 
-  tableEvents = new BehaviorSubject<ITableEvents>(noopTableEvent());
-  dataSource  = new MatTableDataSource<PermissionPageResponse>([]);
-  columns: ITableColumn[]  = [...permissionTableColumns];
+  tableEvents  = new BehaviorSubject<ITableEvents>(noopTableEvent());
+  dataSource   = new MatTableDataSource<RolePageResponse>([]);
+  columns: ITableColumn[]       = [...roleTableColumns];
   rowActions: ITableRowAction[] = [];
-  pageSizeOptions: number[] = [5, 10, 25, 50];
+  pageSizeOptions: number[]     = [5, 10, 25, 50];
   actions: { [key: string]: boolean } = {};
   form!: FormGroup;
-  statusOptions = permissionStatusOptions;
+  statusOptions = roleStatusOptions;
 
   constructor(
     private authService: AuthService,
-    private permissionService: PermissionService,
+    private roleService: RoleService,
     private matDialog: MatDialog,
   ) {}
 
@@ -79,33 +79,33 @@ export class PermissionComponent implements OnInit {
     if (this.actions['updateAction']) {
       actions.push({
         action: 'Actualizar',
-        actionCode: permissionActionsCode.updateAction,
+        actionCode: roleActionsCode.updateAction,
         icon: 'edit',
       });
     }
     if (this.actions['changeStatusAction']) {
       actions.push({
         action: 'Cambiar estado',
-        actionCode: permissionActionsCode.changeStatusAction,
+        actionCode: roleActionsCode.changeStatusAction,
         icon: 'toggle_on',
       });
     }
     if (this.actions['deleteAction']) {
       actions.push({
         action: 'Eliminar',
-        actionCode: permissionActionsCode.deleteAction,
+        actionCode: roleActionsCode.deleteAction,
         icon: 'delete',
       });
     }
     return actions;
   };
 
-  requestPermissionListFn: PaginatedFn = (queryParams: any) => {
+  requestRoleListFn: PaginatedFn = (queryParams: any) => {
     const extra = this.getFilterParams();
-    return this.permissionService.getAll({ ...queryParams, ...extra });
+    return this.roleService.getAll({ ...queryParams, ...extra });
   };
 
-  itemPermissionFormatterFn = (content: PermissionPageResponse[]): PermissionPageResponse[] =>
+  itemRoleFormatterFn = (content: RolePageResponse[]): RolePageResponse[] =>
     content.map(item => ({
       ...item,
       statusLabel: item.status === 'ACTIVO' ? 'ACTIVO' : 'INACTIVO',
@@ -117,43 +117,43 @@ export class PermissionComponent implements OnInit {
     }
   };
 
-  protected rowActionEvent = (event: { item: PermissionPageResponse; actionCode: string }): void => {
+  protected rowActionEvent = (event: { item: RolePageResponse; actionCode: string }): void => {
     const { item, actionCode } = event;
-    if (actionCode === permissionActionsCode.updateAction) this.updatePermission(item);
-    if (actionCode === permissionActionsCode.changeStatusAction) this.changePermissionStatus(item);
-    if (actionCode === permissionActionsCode.deleteAction) this.deletePermission(item);
+    if (actionCode === roleActionsCode.updateAction) this.updateRole(item);
+    if (actionCode === roleActionsCode.changeStatusAction) this.changeRoleStatus(item);
+    if (actionCode === roleActionsCode.deleteAction) this.deleteRole(item);
   };
 
-  createPermission(): void {
-    const ref = this.matDialog.open(AddPermissionComponent, buildRightDialogConfig(null));
+  createRole(): void {
+    const ref = this.matDialog.open(AddRoleComponent, buildRightDialogConfig(null));
     ref.afterClosed().subscribe(ok => {
       if (ok) this.tableEvents.next({ event: 'RELOAD_PAGE' });
     });
   }
 
-  updatePermission(item: PermissionPageResponse): void {
-    const ref = this.matDialog.open(UpdatePermissionComponent, buildRightDialogConfig({ permission: item }),);
+  updateRole(item: RolePageResponse): void {
+    const ref = this.matDialog.open(UpdateRoleComponent, buildRightDialogConfig({ role: item }));
     ref.afterClosed().subscribe(ok => {
       if (ok) this.tableEvents.next({ event: 'RELOAD_PAGE' });
     });
   }
 
-  changePermissionStatus(item: PermissionPageResponse): void {
-    const newStatus = item.status === 'ACTIVO' ? 'INACTIVE' : 'ACTIVE';
-    const actionLabel = newStatus === 'ACTIVE' ? 'activar' : 'desactivar';
-    const successLabel = newStatus === 'ACTIVE' ? 'activado'  : 'desactivado';
+  changeRoleStatus(item: RolePageResponse): void {
+    const newStatus    = item.status === 'ACTIVO' ? 'INACTIVE' : 'ACTIVE';
+    const actionLabel  = newStatus === 'ACTIVE' ? 'activar' : 'desactivar';
+    const successLabel = newStatus === 'ACTIVE' ? 'activado' : 'desactivado';
 
     Notiflix.Confirm.show(
       'Cambiar estado',
-      `¿Deseas ${actionLabel} el permiso "${item.name}"?`,
+      `¿Deseas ${actionLabel} el rol "${item.name}"?`,
       'Sí',
       'No',
       () => {
-        this.permissionService.changeStatus(item.id, { status: newStatus }).subscribe({
+        this.roleService.changeStatus(item.id, { status: newStatus }).subscribe({
           next: () => {
             Notiflix.Report.success(
               'Operación Exitosa',
-              `El permiso fue ${successLabel} con éxito.`,
+              `El rol fue ${successLabel} con éxito.`,
               'OK',
             );
             this.tableEvents.next({ event: 'RELOAD_PAGE' });
@@ -164,18 +164,18 @@ export class PermissionComponent implements OnInit {
     );
   }
 
-  deletePermission(item: PermissionPageResponse): void {
+  deleteRole(item: RolePageResponse): void {
     Notiflix.Confirm.show(
-      'Eliminar permiso',
-      `¿Está seguro de eliminar el permiso "${item.name}"?`,
+      'Eliminar rol',
+      `¿Está seguro de eliminar el rol "${item.name}"?`,
       'Sí',
       'No',
       () => {
-        this.permissionService.delete(item.id).subscribe({
+        this.roleService.delete(item.id).subscribe({
           next: () => {
             Notiflix.Report.success(
               'Operación Exitosa',
-              'El permiso ha sido eliminado con éxito.',
+              'El rol ha sido eliminado con éxito.',
               'OK',
             );
             this.tableEvents.next({ event: 'RELOAD_PAGE' });
@@ -185,7 +185,6 @@ export class PermissionComponent implements OnInit {
       },
     );
   }
-
 
   applyFilter(): void {
     const aditionalParams = this.getFilterParams();
@@ -203,7 +202,7 @@ export class PermissionComponent implements OnInit {
   }
 
   protected handleError = (error: any): void => {
-    console.error('Error en PermissionComponent:', error);
+    console.error('Error en RoleComponent:', error);
     Notiflix.Report.failure(
       'Error',
       error?.message ?? 'Ocurrió un error inesperado.',
@@ -211,6 +210,4 @@ export class PermissionComponent implements OnInit {
     );
   };
 }
-
-
 

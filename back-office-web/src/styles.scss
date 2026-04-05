@@ -47,8 +47,77 @@ button {
   font-weight: 500;
 }
 
+// Forma píldora para botones planos, elevados, outlined y texto
+.mat-flat-button,
+.mat-raised-button,
+.mat-stroked-button,
+.mat-button {
+  border-radius: 20px !important;
+  padding: 0 28px !important;
+  min-width: 110px !important;
+  transition: background-color 0.25s ease, box-shadow 0.25s ease, transform 0.15s ease !important;
+
+  &:hover:not([disabled]) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18) !important;
+  }
+
+  &:active:not([disabled]) {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.14) !important;
+  }
+}
+
+// Primary sólidos (Guardar, Actualizar, Iniciar sesión) con purple más oscuro
+.mat-flat-button.mat-primary,
+.mat-raised-button.mat-primary {
+  background-color: #512DA8 !important;
+
+  &:hover:not([disabled]) {
+    background-color: #4527A0 !important;
+    box-shadow: 0 4px 14px rgba(81, 45, 168, 0.45) !important;
+  }
+
+  &:active:not([disabled]) {
+    background-color: #311B92 !important;
+  }
+
+  &[disabled] {
+    background-color: rgba(0, 0, 0, 0.12) !important;
+    color: rgba(0, 0, 0, 0.26) !important;
+    transform: none !important;
+    box-shadow: none !important;
+  }
+}
+
+// Stroked (Limpiar, Cancelar) hover sutil
+.mat-stroked-button:not([disabled]):hover {
+  background-color: rgba(81, 45, 168, 0.06) !important;
+  border-color: #512DA8 !important;
+  color: #512DA8 !important;
+}
+
 label {
   font-weight: 400;
+}
+
+/* ── Notiflix – botones en forma de píldora ────────────────── */
+a.nx-confirm-button-ok,
+a.nx-confirm-button-cancel {
+  border-radius: 20px !important;
+  padding: 8px 28px !important;
+  min-width: 90px !important;
+  transition: filter 0.2s ease, transform 0.15s ease !important;
+
+  &:hover {
+    filter: brightness(1.12);
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
+    filter: brightness(0.95);
+  }
 }
 
 /* UTILITIES */
