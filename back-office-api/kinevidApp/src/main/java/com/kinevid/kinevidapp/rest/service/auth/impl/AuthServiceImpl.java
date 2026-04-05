@@ -8,6 +8,7 @@ import com.kinevid.kinevidapp.rest.model.dto.auth.LoginRequestDto;
 import com.kinevid.kinevidapp.rest.model.dto.auth.RefreshTokenRequestDto;
 import com.kinevid.kinevidapp.rest.model.entity.auth.RefreshToken;
 import com.kinevid.kinevidapp.rest.model.entity.auth.User;
+import com.kinevid.kinevidapp.rest.repository.rp.RolePermissionRepository;
 import com.kinevid.kinevidapp.rest.repository.u.UserRepository;
 import com.kinevid.kinevidapp.rest.service.auth.AuthService;
 import com.kinevid.kinevidapp.rest.service.auth.RefreshTokenService;
@@ -21,6 +22,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @Slf4j
@@ -43,6 +46,9 @@ public class AuthServiceImpl implements AuthService {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private RolePermissionRepository rolePermissionRepository;
 
     @Override
     @Transactional
@@ -70,7 +76,10 @@ public class AuthServiceImpl implements AuthService {
             String rolePrincipal = userRoleService.getPrimaryRoleNameByUserId(user.getId())
                     .orElse("USER");
 
-            log.info("Login exitoso para usuario: {} con rol: {}", user.getUsername(), rolePrincipal);
+            List<String> permissions = rolePermissionRepository.findPermissionNamesByUserId(user.getId());
+
+            log.info("Login exitoso para usuario: {} con rol: {} y {} permisos",
+                    user.getUsername(), rolePrincipal, permissions.size());
 
             return JwtResponseDto.builder()
                     .accessToken(accessToken)
@@ -83,6 +92,7 @@ public class AuthServiceImpl implements AuthService {
                             .email(user.getEmail())
                             .fullName(user.getUsername())
                             .role(rolePrincipal)
+                            .permissions(permissions)
                             .build()
                     )
                     .build();
@@ -125,6 +135,8 @@ public class AuthServiceImpl implements AuthService {
             String rolePrincipal = userRoleService.getPrimaryRoleNameByUserId(user.getId())
                     .orElse("USER");
 
+            List<String> permissions = rolePermissionRepository.findPermissionNamesByUserId(user.getId());
+
             String newAccessToken = jwtUtils.generateAccessToken(user.getUsername());
             long accessTokenExpiresIn = jwtUtils.getAccessTokenExpirationTime();
 
@@ -140,6 +152,7 @@ public class AuthServiceImpl implements AuthService {
                             .email(user.getEmail())
                             .fullName(user.getUsername())
                             .role(rolePrincipal)
+                            .permissions(permissions)
                             .build()
                     )
                     .build();
@@ -231,3 +244,4 @@ public class AuthServiceImpl implements AuthService {
         }
     }
 }
+

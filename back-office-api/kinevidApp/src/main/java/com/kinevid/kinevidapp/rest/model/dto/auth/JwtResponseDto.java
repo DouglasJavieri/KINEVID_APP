@@ -3,6 +3,8 @@ package com.kinevid.kinevidapp.rest.model.dto.auth;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 
+import java.util.List;
+
 /**
  * @author Douglas Cristhian Javieri Vino
  * @created 16/02/2026
@@ -45,5 +47,7 @@ public class JwtResponseDto {
         private String fullName;
 
         private String role;
+
+        private List<String> permissions;
     }
 }

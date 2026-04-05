@@ -19,12 +19,11 @@ const routes: Routes = [
       import('./role/role.module').then(m => m.RoleModule),
   },
 
-  // ── Users (pending implementation) ───────────────────────────────────────
-  // {
-  //   path: 'users',
-  //   loadChildren: () =>
-  //     import('./user/user.module').then(m => m.UserModule),
-  // },
+  {
+    path: 'users',
+    loadChildren: () =>
+      import('./user/user.module').then(m => m.UserModule),
+  },
 
   { path: '', redirectTo: 'permissions', pathMatch: 'full' },
 ];

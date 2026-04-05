@@ -23,6 +23,8 @@ export interface UserAuthInfo {
   email: string;
   fullName: string | null;
   role: string | null;
+  /** Permisos efectivos del usuario (todos sus roles combinados). */
+  permissions: string[];
 }
 
 /** Respuesta de login y refresh — contiene ambos tokens */
@@ -44,17 +46,65 @@ export interface ApiResponse<T> {
 
 /**
  * Enum de roles del sistema.
- * Los valores coinciden exactamente con los roles definidos en el backend
- * (Spring Security convention: prefijo ROLE_).
- *
- * Usar siempre este enum en guards, directivas y rutas.
- * NUNCA hardcodear strings de roles directamente en el código.
- *
- * @see SecurityConfig.java — kinevid.app.admin.role=ROLE_ADMIN
+ * Los valores coinciden exactamente con los roles definidos en el backend.
+ * Usar en Guards de ruta. Para control de UI usar AppPermission.
  */
 export enum AppRole {
   ADMIN          = 'ROLE_ADMIN',
-  // Añadir aquí los nuevos roles cuando el backend los defina:
-  // FISIOTERAPEUTA = 'ROLE_FISIOTERAPEUTA',
-  // RECEPCIONISTA  = 'ROLE_RECEPCIONISTA',
+  ROOT           = 'ROLE_ROOT',
+  FISIOTERAPEUTA = 'ROLE_FISIOTERAPEUTA',
+  RECEPCIONISTA  = 'ROLE_RECEPCIONISTA',
+}
+
+/**
+ * Enum de permisos del sistema.
+ * Los valores coinciden exactamente con los permisos del backend (DataLoader).
+ *
+ * ═══════════════════════════════════════════════════════════════════════
+ * REGLA DE ORO: Para controlar UI (mostrar/ocultar botones/pantallas)
+ * el permiso SIEMPRE debe estar aquí Y en el DataLoader.
+ *
+ * WORKFLOW para nuevo módulo (ej: Citas):
+ *   1. Agregar aquí:       LIST_APPOINTMENT = 'LIST_APPOINTMENT'
+ *   2. Agregar DataLoader: {"LIST_APPOINTMENT", "Listar citas"}
+ *   3. Usar en pantalla:   hasPermission(AppPermission.LIST_APPOINTMENT)
+ *   4. Al reiniciar back:  syncPermissionsToExistingFullAccessRoles() lo
+ *                          asigna automáticamente a ROLE_ADMIN y ROLE_ROOT
+ *   5. Admin asigna otros roles desde la UI de Roles → Actualizar
+ *
+ * PERMISOS CREADOS SOLO POR UI (sin enum):
+ *   → Solo controlan el backend (@PreAuthorize)
+ *   → NO controlan visibilidad de UI
+ * ═══════════════════════════════════════════════════════════════════════
+ *
+ * Uso: authService.hasPermission(AppPermission.LIST_ROLE)
+ */
+export enum AppPermission {
+  // ── Usuarios ──────────────────────────────────────────────────────────────
+  CREATE_USER        = 'CREATE_USER',
+  VIEW_USER          = 'VIEW_USER',
+  UPDATE_USER        = 'UPDATE_USER',
+  DELETE_USER        = 'DELETE_USER',
+  LIST_USER          = 'LIST_USER',
+  CHANGE_USER_STATUS = 'CHANGE_USER_STATUS',
+
+  // ── Roles ─────────────────────────────────────────────────────────────────
+  CREATE_ROLE        = 'CREATE_ROLE',
+  READ_ROLE          = 'READ_ROLE',
+  UPDATE_ROLE        = 'UPDATE_ROLE',
+  DELETE_ROLE        = 'DELETE_ROLE',
+  LIST_ROLE          = 'LIST_ROLE',
+  CHANGE_ROLE_STATUS = 'CHANGE_ROLE_STATUS',
+
+  // ── Permisos ──────────────────────────────────────────────────────────────
+  CREATE_PERMISSION             = 'CREATE_PERMISSION',
+  READ_PERMISSION               = 'READ_PERMISSION',
+  UPDATE_PERMISSION             = 'UPDATE_PERMISSION',
+  DELETE_PERMISSION             = 'DELETE_PERMISSION',
+  LIST_PERMISSION               = 'LIST_PERMISSION',
+  CHANGE_PERMISSION_STATUS      = 'CHANGE_PERMISSION_STATUS',
+
+  // ── Asignación rol-permiso ─────────────────────────────────────────────────
+  ASSIGN_PERMISSION_TO_ROLE   = 'ASSIGN_PERMISSION_TO_ROLE',
+  REMOVE_PERMISSION_FROM_ROLE = 'REMOVE_PERMISSION_FROM_ROLE',
 }

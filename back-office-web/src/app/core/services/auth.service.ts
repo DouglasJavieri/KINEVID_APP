@@ -135,6 +135,34 @@ export class AuthService {
   }
 
   /**
+   * Verifica si el usuario actual tiene el permiso indicado.
+   * USO PRINCIPAL para mostrar/ocultar botones y secciones de UI.
+   *
+   * Ejemplo: authService.hasPermission(AppPermission.CREATE_ROLE)
+   */
+  hasPermission(permission: string): boolean {
+    const perms = this.getCurrentUser()?.permissions ?? [];
+    return perms.includes(permission);
+  }
+
+  /**
+   * Verifica si el usuario tiene AL MENOS UNO de los permisos indicados.
+   * Útil para mostrar secciones que requieren cualquiera de varios permisos.
+   */
+  hasAnyPermission(permissions: string[]): boolean {
+    const userPerms = this.getCurrentUser()?.permissions ?? [];
+    return permissions.some(p => userPerms.includes(p));
+  }
+
+  /**
+   * Verifica si el usuario tiene TODOS los permisos indicados.
+   */
+  hasAllPermissions(permissions: string[]): boolean {
+    const userPerms = this.getCurrentUser()?.permissions ?? [];
+    return permissions.every(p => userPerms.includes(p));
+  }
+
+  /**
    * Indicador de sesión expirada para el LoginComponent.
    * Se activa cuando el interceptor fuerza el logout por refresh fallido.
    * Se auto-resetea en el primer acceso (consumo único).

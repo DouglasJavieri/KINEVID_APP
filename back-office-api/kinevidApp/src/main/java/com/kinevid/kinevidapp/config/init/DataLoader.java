@@ -27,6 +27,8 @@ import java.util.List;
 @RequiredArgsConstructor
 @Slf4j
 public class DataLoader implements CommandLineRunner {
+    private static final String ROLE_ROOT           = "ROLE_ROOT";
+    private static final String ROLE_FISIOTERAPEUTA = "ROLE_FISIOTERAPEUTA";
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
@@ -54,7 +56,13 @@ public class DataLoader implements CommandLineRunner {
 
         try {
             List<Permission> permissions = createDefaultPermissions();
+
             Role adminRole = createAdminRole(permissions);
+            createRootRole(permissions);
+            createFisioterapeutaRole();
+
+            syncPermissionsToExistingFullAccessRoles(permissions);
+
             User adminUser = createAdminUser();
             assignAdminRoleToUser(adminUser, adminRole);
 
@@ -70,24 +78,26 @@ public class DataLoader implements CommandLineRunner {
         log.info("Creando permisos por defecto");
 
         String[][] permissionsData = {
-                {"CREATE_USER", "Crear usuario"},
-                {"VIEW_USER", "Ver usuario"},
-                {"UPDATE_USER", "Actualizar usuario"},
-                {"DELETE_USER", "Eliminar usuario"},
-                {"LIST_USER", "Listar usuarios"},
-                {"CHANGE_USER_STATUS", "Cambiar estado usuario"},
-                {"CREATE_ROLE", "Crear rol"},
-                {"READ_ROLE", "Ver rol"},
-                {"UPDATE_ROLE", "Actualizar rol"},
-                {"DELETE_ROLE", "Eliminar rol"},
-                {"LIST_ROLE", "Listar roles"},
-                {"CREATE_PERMISSION", "Crear permiso"},
-                {"READ_PERMISSION", "Ver permiso"},
-                {"UPDATE_PERMISSION", "Actualizar permiso"},
-                {"DELETE_PERMISSION", "Eliminar permiso"},
-                {"LIST_PERMISSION", "Listar permisos"},
-                {"ASSIGN_PERMISSION_TO_ROLE", "Asignar permisos a rol"},
-                {"REMOVE_PERMISSION_FROM_ROLE", "Remover permisos de rol"},
+                {"CREATE_USER",   "Crear usuario"},
+                {"VIEW_USER",     "Ver usuario"},
+                {"UPDATE_USER",   "Actualizar usuario"},
+                {"DELETE_USER",   "Eliminar usuario"},
+                {"LIST_USER",     "Listar usuarios"},
+                {"CHANGE_USER_STATUS",  "Cambiar estado de usuario"},
+                {"CREATE_ROLE",   "Crear rol"},
+                {"READ_ROLE",     "Ver rol"},
+                {"UPDATE_ROLE",   "Actualizar rol"},
+                {"DELETE_ROLE",   "Eliminar rol"},
+                {"LIST_ROLE",     "Listar roles"},
+                {"CHANGE_ROLE_STATUS",  "Cambiar estado de rol"},
+                {"CREATE_PERMISSION",   "Crear permiso"},
+                {"READ_PERMISSION",     "Ver permiso"},
+                {"UPDATE_PERMISSION",   "Actualizar permiso"},
+                {"DELETE_PERMISSION",   "Eliminar permiso"},
+                {"LIST_PERMISSION",     "Listar permisos"},
+                {"CHANGE_PERMISSION_STATUS", "Cambiar estado de permiso"},
+                {"ASSIGN_PERMISSION_TO_ROLE",    "Asignar permisos a rol"},
+                {"REMOVE_PERMISSION_FROM_ROLE",  "Remover permisos de rol"},
         };
 
         for (String[] permData : permissionsData) {
@@ -168,6 +178,72 @@ public class DataLoader implements CommandLineRunner {
                     .build();
             userRoleRepository.save(userRole);
             log.info("Rol ADMIN asignado");
+        }
+    }
+
+    private void createRootRole(List<Permission> allPermissions) {
+        log.info("Verificando rol ROOT");
+
+        roleRepository.findByName(ROLE_ROOT).orElseGet(() -> {
+            Role newRole = Role.builder()
+                    .name(ROLE_ROOT)
+                    .description("Rol raíz con acceso total al sistema")
+                    .status(RoleStatus.ACTIVE)
+                    .build();
+
+            Role savedRole = roleRepository.save(newRole);
+
+            for (Permission permission : allPermissions) {
+                if (!rolePermissionRepository.existsByRoleIdAndPermissionId(
+                        savedRole.getId(), permission.getId())) {
+                    rolePermissionRepository.save(RolePermission.builder()
+                            .role(savedRole)
+                            .permission(permission)
+                            .build());
+                }
+            }
+
+            log.info("Rol ROOT creado con {} permisos", allPermissions.size());
+            return savedRole;
+        });
+    }
+
+    private void createFisioterapeutaRole() {
+        log.info("Verificando rol FISIOTERAPEUTA");
+
+        roleRepository.findByName(ROLE_FISIOTERAPEUTA).orElseGet(() -> {
+            Role fisioRole = Role.builder()
+                    .name(ROLE_FISIOTERAPEUTA)
+                    .description("Rol para fisioterapeutas: acceso a citas, historial clínico y análisis de imágenes")
+                    .status(RoleStatus.ACTIVE)
+                    .build();
+
+            Role savedRole = roleRepository.save(fisioRole);
+            log.info("Rol FISIOTERAPEUTA creado. Los permisos se asignarán conforme avancen los módulos.");
+            return savedRole;
+        });
+    }
+
+    private void syncPermissionsToExistingFullAccessRoles(List<Permission> allPermissions) {
+        List<String> fullAccessRoles = List.of(adminRoleName, ROLE_ROOT);
+
+        for (String roleName : fullAccessRoles) {
+            roleRepository.findByName(roleName).ifPresent(role -> {
+                int assigned = 0;
+                for (Permission permission : allPermissions) {
+                    if (!rolePermissionRepository.existsByRoleIdAndPermissionId(
+                            role.getId(), permission.getId())) {
+                        rolePermissionRepository.save(RolePermission.builder()
+                                .role(role)
+                                .permission(permission)
+                                .build());
+                        assigned++;
+                    }
+                }
+                if (assigned > 0) {
+                    log.info("Sincronizados {} permisos nuevos al rol {}", assigned, roleName);
+                }
+            });
         }
     }
 }

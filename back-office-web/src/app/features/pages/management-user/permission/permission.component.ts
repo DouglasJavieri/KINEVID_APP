@@ -7,7 +7,7 @@ import * as Notiflix from 'notiflix';
 
 import { AuthService }        from '../../../../core/services/auth.service';
 import { PermissionService }  from '../../../../core/services/permission/permission.service';
-import { AppRole }            from '../../../../core/models/auth.model';
+import { AppPermission }      from '../../../../core/models/auth.model';
 import {
   ITableColumn,
   ITableEvents,
@@ -60,13 +60,12 @@ export class PermissionComponent implements OnInit {
   }
 
   private loadActions(): void {
-    const isAdmin = this.authService.hasRole(AppRole.ADMIN);
     this.actions = {
-      listAction: isAdmin,
-      createAction: isAdmin,
-      updateAction: isAdmin,
-      changeStatusAction: isAdmin,
-      deleteAction: isAdmin,
+      listAction: this.authService.hasPermission(AppPermission.LIST_PERMISSION),
+      createAction: this.authService.hasPermission(AppPermission.CREATE_PERMISSION),
+      updateAction: this.authService.hasPermission(AppPermission.UPDATE_PERMISSION),
+      changeStatusAction: this.authService.hasPermission(AppPermission.CHANGE_PERMISSION_STATUS),
+      deleteAction: this.authService.hasPermission(AppPermission.DELETE_PERMISSION),
     };
     this.rowActions = this.buildRowActions();
     if (this.rowActions.length === 0) {

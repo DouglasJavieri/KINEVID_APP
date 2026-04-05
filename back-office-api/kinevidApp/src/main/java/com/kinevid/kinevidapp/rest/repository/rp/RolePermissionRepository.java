@@ -37,4 +37,13 @@ public interface RolePermissionRepository extends JpaRepository<RolePermission,L
             "WHERE rp.permission.id = :permissionId AND rp.deleted = false")
     boolean hasActiveRolesByPermissionId(@Param("permissionId") Long permissionId);
 
+    @Query("SELECT DISTINCT rp.permission.name " +
+            "FROM RolePermission rp " +
+            "WHERE rp.deleted = false " +
+            "  AND rp.role.id IN (" +
+            "      SELECT ur.role.id FROM UserRole ur " +
+            "      WHERE ur.user.id = :userId AND ur.deleted = false" +
+            "  )")
+    List<String> findPermissionNamesByUserId(@Param("userId") Long userId);
+
 }

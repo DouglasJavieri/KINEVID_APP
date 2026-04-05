@@ -26,6 +26,11 @@ export class PermissionService {
       .pipe(map(resp => mapResponseApi(url, resp)));
   }
 
+  getAllForSelect(): Observable<PermissionPageResponse[]> {
+    return this.getAll({ page: 0, size: 500, sortBy: 'name', sortDir: 'ASC', status: 'ACTIVE' })
+      .pipe(map(paginator => paginator.content));
+  }
+
   getById(id: number): Observable<PermissionResponse> {
     const url = environment.apiUrl + environment.endpoints.permission + `/${id}`;
     return this.http.get<ApiResponse<PermissionResponse>>(url)
