@@ -76,6 +76,16 @@ public interface UserRepository extends JpaRepository<User, Long> {
             "AND ur.deleted = false")
     List<String> findRoleNamesByUserId(@Param("userId") Long userId);
 
+    @Query("SELECT u " +
+            "FROM User u " +
+            "WHERE u.deleted = false " +
+            "AND u.status = com.kinevid.kinevidapp.rest.model.enums.auth.UserStatus.ACTIVE " +
+            "AND u.id NOT IN (" +
+            "  SELECT e.user.id FROM com.kinevid.kinevidapp.rest.model.entity.emp.Employee e " +
+            "  WHERE e.user IS NOT NULL AND e.deleted = false" +
+            ")")
+    List<User> findUsersAvailableForEmployee();
+
     @Query("SELECT DISTINCT rp.permission.name " +
             "FROM UserRole ur, RolePermission rp " +
             "WHERE ur.user.id = :userId " +

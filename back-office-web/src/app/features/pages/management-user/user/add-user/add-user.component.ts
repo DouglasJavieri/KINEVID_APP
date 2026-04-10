@@ -34,23 +34,9 @@ export class AddUserComponent implements OnInit, AfterViewInit {
   }
   private buildForm(): void {
     this.form = new FormGroup({
-      username: new FormControl("", [
-        Validators.required,
-        Validators.minLength(3),
-        Validators.maxLength(30),
-        Validators.pattern("^[a-zA-Z0-9_]+$"),
-        noWhitespaceValidator(),
-      ]),
-      email: new FormControl("", [
-        Validators.required,
-        Validators.email,
-        Validators.maxLength(50),
-      ]),
-      password: new FormControl("", [
-        Validators.required,
-        Validators.minLength(8),
-        Validators.maxLength(100),
-      ]),
+      username: new FormControl("", [Validators.required, Validators.minLength(3), Validators.maxLength(30), Validators.pattern("^[a-zA-Z0-9_]+$"), noWhitespaceValidator(),]),
+      email: new FormControl("", [Validators.required, Validators.email, Validators.maxLength(50),]),
+      password: new FormControl("", [Validators.required, Validators.minLength(8), Validators.maxLength(100),]),
       role: new FormControl(null, [Validators.required]),
     });
   }

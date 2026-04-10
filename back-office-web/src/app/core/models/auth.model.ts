@@ -107,4 +107,14 @@ export enum AppPermission {
   // ── Asignación rol-permiso ─────────────────────────────────────────────────
   ASSIGN_PERMISSION_TO_ROLE   = 'ASSIGN_PERMISSION_TO_ROLE',
   REMOVE_PERMISSION_FROM_ROLE = 'REMOVE_PERMISSION_FROM_ROLE',
+
+  // ── Empleados ─────────────────────────────────────────────────────────────
+  CREATE_EMPLOYEE             = 'CREATE_EMPLOYEE',
+  VIEW_EMPLOYEE               = 'VIEW_EMPLOYEE',
+  UPDATE_EMPLOYEE             = 'UPDATE_EMPLOYEE',
+  DELETE_EMPLOYEE             = 'DELETE_EMPLOYEE',
+  LIST_EMPLOYEE               = 'LIST_EMPLOYEE',
+  CHANGE_EMPLOYEE_STATUS      = 'CHANGE_EMPLOYEE_STATUS',
+  ASSIGN_USER_TO_EMPLOYEE     = 'ASSIGN_USER_TO_EMPLOYEE',
+  REMOVE_USER_FROM_EMPLOYEE   = 'REMOVE_USER_FROM_EMPLOYEE',
 }

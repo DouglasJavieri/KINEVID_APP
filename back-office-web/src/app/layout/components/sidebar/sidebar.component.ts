@@ -33,6 +33,12 @@ export class SidebarComponent {
           route: '/management-users/users'
         },
         {
+          id: 'employees',
+          label: 'Empleados',
+          icon: 'badge',
+          route: '/management-users/employees'
+        },
+        {
           id: 'roles',
           label: 'Roles',
           icon: 'security',

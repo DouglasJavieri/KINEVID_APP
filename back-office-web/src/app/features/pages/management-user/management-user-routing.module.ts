@@ -25,6 +25,12 @@ const routes: Routes = [
       import('./user/user.module').then(m => m.UserModule),
   },
 
+  {
+    path: 'employees',
+    loadChildren: () =>
+      import('./employee/employee.module').then(m => m.EmployeeModule),
+  },
+
   { path: '', redirectTo: 'permissions', pathMatch: 'full' },
 ];
 

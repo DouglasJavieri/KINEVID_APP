@@ -17,6 +17,7 @@ export const environment = {
     permission: '/permission',
     userRole: '/user-role',
     rolePermission: '/role-permission',
+    employee: '/employee',
   }
 };
 
