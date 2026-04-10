@@ -1,7 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { FormControl, FormGroup } from '@angular/forms';
 import { MatTableDataSource } from '@angular/material/table';
+import { MatDialog } from '@angular/material/dialog';
 import { BehaviorSubject } from 'rxjs';
+import { Router } from '@angular/router';
 import * as Notiflix from 'notiflix';
 
 import { AuthService }     from '../../../../core/services/auth.service';
@@ -23,6 +25,8 @@ import {
   bolivianDepartmentOptions,
   EmployeePageResponse,
 } from '../../../../core/models/employee/employee.interface';
+import { AssignUserEmployeeComponent } from './assign-user-employee/assign-user-employee.component';
+import { buildRightDialogConfig }      from '../../../../shared/utils/dialog.util';
 
 @Component({
   selector: 'knv-employee',
@@ -43,6 +47,8 @@ export class EmployeeComponent implements OnInit {
   constructor(
     private authService:     AuthService,
     private employeeService: EmployeeService,
+    private router:          Router,
+    private matDialog:       MatDialog,
   ) {}
 
   ngOnInit(): void {
@@ -59,12 +65,12 @@ export class EmployeeComponent implements OnInit {
 
   private loadActions(): void {
     this.actions = {
-      listAction:         this.authService.hasPermission(AppPermission.LIST_EMPLOYEE),
-      createAction:       this.authService.hasPermission(AppPermission.CREATE_EMPLOYEE),
-      updateAction:       this.authService.hasPermission(AppPermission.UPDATE_EMPLOYEE),
+      listAction: this.authService.hasPermission(AppPermission.LIST_EMPLOYEE),
+      createAction: this.authService.hasPermission(AppPermission.CREATE_EMPLOYEE),
+      updateAction: this.authService.hasPermission(AppPermission.UPDATE_EMPLOYEE),
       changeStatusAction: this.authService.hasPermission(AppPermission.CHANGE_EMPLOYEE_STATUS),
-      deleteAction:       this.authService.hasPermission(AppPermission.DELETE_EMPLOYEE),
-      assignUserAction:   this.authService.hasPermission(AppPermission.ASSIGN_USER_TO_EMPLOYEE),
+      deleteAction: this.authService.hasPermission(AppPermission.DELETE_EMPLOYEE),
+      assignUserAction: this.authService.hasPermission(AppPermission.ASSIGN_USER_TO_EMPLOYEE),
     };
     this.rowActions = this.buildRowActions();
     if (this.rowActions.length === 0) {
@@ -127,23 +133,26 @@ export class EmployeeComponent implements OnInit {
   };
 
   createEmployee(): void {
-    // TODO: implementar AddEmployeeComponent
-    Notiflix.Report.info('Próximamente', 'El formulario de creación de empleado estará disponible pronto.', 'OK');
+    this.router.navigate(['/management-users/employees/add']);
   }
 
-  updateEmployee(_item: EmployeePageResponse): void {
-    // TODO: implementar UpdateEmployeeComponent
-    Notiflix.Report.info('Próximamente', 'El formulario de edición de empleado estará disponible pronto.', 'OK');
+  updateEmployee(item: EmployeePageResponse): void {
+    this.router.navigate(['/management-users/employees/update', item.id]);
   }
 
-  assignUser(_item: EmployeePageResponse): void {
-    // TODO: implementar AssignUserToEmployeeComponent
-    Notiflix.Report.info('Próximamente', 'El modal de asignación de usuario estará disponible pronto.', 'OK');
+  assignUser(item: EmployeePageResponse): void {
+    const ref = this.matDialog.open(
+      AssignUserEmployeeComponent,
+      buildRightDialogConfig({ employee: item }),
+    );
+    ref.afterClosed().subscribe(ok => {
+      if (ok) this.tableEvents.next({ event: 'RELOAD_PAGE' });
+    });
   }
 
   changeEmployeeStatus(item: EmployeePageResponse): void {
-    const newStatus    = item.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
-    const actionLabel  = newStatus === 'ACTIVE' ? 'activar'   : 'desactivar';
+    const newStatus = item.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
+    const actionLabel = newStatus === 'ACTIVE' ? 'activar'   : 'desactivar';
     const successLabel = newStatus === 'ACTIVE' ? 'activado'  : 'desactivado';
 
     Notiflix.Confirm.show(
@@ -153,7 +162,9 @@ export class EmployeeComponent implements OnInit {
       () => {
         this.employeeService.changeStatus(item.id, { status: newStatus }).subscribe({
           next: () => {
-            Notiflix.Report.success('Operación Exitosa', `El empleado fue ${successLabel} con éxito.`, 'OK');
+            Notiflix.Report.success('Operación Exitosa',
+              `El empleado fue ${successLabel} con éxito.`,
+              'OK');
             this.tableEvents.next({ event: 'RELOAD_PAGE' });
           },
           error: err => this.handleError(err),
@@ -170,7 +181,9 @@ export class EmployeeComponent implements OnInit {
       () => {
         this.employeeService.delete(item.id).subscribe({
           next: () => {
-            Notiflix.Report.success('Operación Exitosa', 'El empleado fue eliminado con éxito.', 'OK');
+            Notiflix.Report.success('Operación Exitosa',
+              'El empleado fue eliminado con éxito.',
+              'OK');
             this.tableEvents.next({ event: 'RELOAD_PAGE' });
           },
           error: err => this.handleError(err),

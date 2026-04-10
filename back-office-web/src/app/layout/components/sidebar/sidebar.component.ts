@@ -1,16 +1,34 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { trigger, transition, style, animate } from '@angular/animations';
 import { MenuItem } from '../../../shared/models/menu.interface';
+
+export const expandCollapse = trigger('expandCollapse', [
+  transition(':enter', [
+    style({ height: '0px', opacity: 0, overflow: 'hidden' }),
+    animate('320ms cubic-bezier(0.4, 0, 0.2, 1)',
+      style({ height: '*', opacity: 1, overflow: 'hidden' })
+    ),
+  ]),
+  transition(':leave', [
+    style({ height: '*', opacity: 1, overflow: 'hidden' }),
+    animate('260ms cubic-bezier(0.4, 0, 0.2, 1)',
+      style({ height: '0px', opacity: 0, overflow: 'hidden' })
+    ),
+  ]),
+]);
 
 @Component({
   selector: 'knv-sidebar',
   templateUrl: './sidebar.component.html',
-  styleUrls: ['sidebar.component.scss']
+  styleUrls: ['sidebar.component.scss'],
+  animations: [expandCollapse],
 })
 export class SidebarComponent {
   @Input() isOpen = true;
   @Output() toggleSidebar = new EventEmitter<void>();
 
   expandedItems: Set<string> = new Set();
+  logoError = false;
 
   menuItems: MenuItem[] = [
     {
@@ -117,5 +135,9 @@ export class SidebarComponent {
 
   hasChildren(item: MenuItem): boolean {
     return item.children !== undefined && item.children.length > 0;
+  }
+
+  onLogoError(): void {
+    this.logoError = true;
   }
 }

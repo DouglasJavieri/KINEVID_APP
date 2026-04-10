@@ -47,7 +47,7 @@ export class ServerPagingTableComponent
   @Input() eventManager!: BehaviorSubject<ITableEvents>;
   @Input() isFilterOpened = false;
   @Input() hasFilters = false;
-  @Input() actionsColumnWidth = '15px';
+  @Input() actionsColumnWidth = '30px';
   @Input() actionsTriggerIcon = 'list';
 
 

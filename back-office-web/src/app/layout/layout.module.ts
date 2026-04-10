@@ -6,6 +6,7 @@ import {SidebarComponent} from "./components/sidebar/sidebar.component";
 import {NavbarComponent} from "./components/navbar/navbar.component";
 import {MainLayoutComponent} from "./main-layout/main-layout.component";
 import {MatIconModule} from "@angular/material/icon";
+import {MatTooltipModule} from "@angular/material/tooltip";
 
 @NgModule({
   declarations: [
@@ -16,7 +17,8 @@ import {MatIconModule} from "@angular/material/icon";
   imports: [
     CommonModule,
     RouterModule,
-    MatIconModule
+    MatIconModule,
+    MatTooltipModule,
   ],
   exports: [
     SidebarComponent,

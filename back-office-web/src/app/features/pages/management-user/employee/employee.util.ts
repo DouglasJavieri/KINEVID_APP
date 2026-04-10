@@ -28,7 +28,7 @@ export const employeeTableColumns: ITableColumn[] = [
     visible: true,
     isModelProperty: true,
     isSort: false,
-    width: '120px',
+    width: '80px',
   },
   {
     name: 'Especialidad',
@@ -36,7 +36,7 @@ export const employeeTableColumns: ITableColumn[] = [
     visible: true,
     isModelProperty: true,
     isSort: false,
-    width: '160px',
+    width: '190px',
   },
   {
     name: 'Departamento',
@@ -44,7 +44,7 @@ export const employeeTableColumns: ITableColumn[] = [
     visible: true,
     isModelProperty: true,
     isSort: false,
-    width: '140px',
+    width: '100px',
   },
   {
     name: 'Usuario asignado',
@@ -60,7 +60,7 @@ export const employeeTableColumns: ITableColumn[] = [
     visible: true,
     isModelProperty: true,
     isSort: false,
-    width: '110px',
+    width: '90px',
     textContainerCellStyle: (row: EmployeePageResponse): { [key: string]: string } => {
       switch (row.status) {
         case 'ACTIVE':   return { color: '#2e7d32', fontWeight: 'bold' };

@@ -26,7 +26,8 @@
             [rowActions]="rowActions"
             [eventManager]="tableEvents"
             [pageSizeOptions]="pageSizeOptions"
-            [hasFilters]="true">
+            [hasFilters]="true"
+            >
             <form [formGroup]="form" (ngSubmit)="applyFilter()">
               <div fxLayout="row wrap">
                 <div fxFlex="25" fxFlex.lt-md="100" class="p5">

@@ -15,15 +15,16 @@ const routes: Routes = [
       // ── Home (all authenticated users) ───────────────────────────────
       { path: 'home', component: HomeComponent },
 
-      // ── Management Users (ADMIN only) ────────────────────────────────
+      // ── Management Users (ADMIN / ROOT) ─────────────────────────────────
       // Sub-routes handled in ManagementUserRoutingModule:
       //   /management-users/permissions
-      //   /management-users/roles     (future)
-      //   /management-users/users     (future)
+      //   /management-users/roles
+      //   /management-users/users
+      //   /management-users/employees
       {
         path: 'management-users',
         canActivate: [RoleGuard],
-        data: { roles: [AppRole.ADMIN] },
+        data: { roles: [AppRole.ADMIN, AppRole.ROOT] },
         loadChildren: () =>
           import('./management-user/management-user.module').then(m => m.ManagementUserModule),
       },
