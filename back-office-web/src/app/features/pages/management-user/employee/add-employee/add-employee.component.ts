@@ -98,16 +98,16 @@ export class AddEmployeeComponent implements OnInit {
 
     const v = this.form.value;
     const body: EmployeeRequest = {
-      firstName:        v.firstName.trim(),
-      paternalSurname:  v.paternalSurname.trim(),
-      maternalSurname:  v.maternalSurname?.trim() || null,
-      ci:               v.ci.trim(),
-      expedition:       v.expedition,
-      specialty:        v.specialty.trim(),
-      phone:            v.phone?.trim() || null,
-      admissionDate:    this.formatDate(v.admissionDate),
-      address:          v.address?.trim() || null,
-      department:       v.department,
+      firstName: v.firstName.trim(),
+      paternalSurname: v.paternalSurname.trim(),
+      maternalSurname: v.maternalSurname?.trim() || null,
+      ci: v.ci.trim(),
+      expedition: v.expedition,
+      specialty: v.specialty.trim(),
+      phone: v.phone?.trim() || null,
+      admissionDate: this.formatDate(v.admissionDate),
+      address: v.address?.trim() || null,
+      department: v.department,
       professionalEmail: v.professionalEmail?.trim() || null,
     };
 
